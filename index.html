@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情境領導：職涯領航員 App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="logo">Career Pilot 2.0</div>
+        <div class="subtitle">SLII 領導力實驗室</div>
+    </header>
+
+    <!-- 玩家切換頁籤 -->
+    <nav class="player-tabs" id="playerTabs"></nav>
+
+    <main id="appBody">
+        <!-- 內容由 JavaScript 動態生成 -->
+    </main>
+
+    <!-- 底部功能列 -->
+    <div class="action-bar">
+        <button class="event-btn" onclick="triggerRandomEvent()">？ 抽取事件</button>
+    </div>
+
+    <!-- 結果彈出視窗 (Modal) -->
+    <div id="modalOverlay" class="overlay">
+        <div class="modal">
+            <div id="modalHeader" class="modal-header">判定結果</div>
+            <div id="modalContent" class="modal-content"></div>
+            <button class="close-btn" onclick="closeModal()">確認並關閉</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
