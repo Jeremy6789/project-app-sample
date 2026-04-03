@@ -2,38 +2,68 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>情境領導：職涯領航員 App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Career Pilot 2.0 | 管理主控台</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <div class="logo">Career Pilot 2.0</div>
-        <div class="subtitle">SLII 領導力實驗室</div>
-    </header>
-
-    <!-- 玩家切換頁籤 -->
-    <nav class="player-tabs" id="playerTabs"></nav>
-
-    <main id="appBody">
-        <!-- 內容由 JavaScript 動態生成 -->
-    </main>
-
-    <!-- 底部功能列 -->
-    <div class="action-bar">
-        <button class="event-btn" onclick="triggerRandomEvent()">？ 抽取事件</button>
-    </div>
-
-    <!-- 結果彈出視窗 (Modal) -->
-    <div id="modalOverlay" class="overlay">
-        <div class="modal">
-            <div id="modalHeader" class="modal-header">判定結果</div>
-            <div id="modalContent" class="modal-content"></div>
-            <button class="close-btn" onclick="closeModal()">確認並關閉</button>
+<!-- 開局設定畫面 -->
+<div id="setupScreen" class="overlay flex-center">
+    <div class="setup-card">
+        <h1>Career Pilot 2.0</h1>
+        <p>請選擇團隊經理人數</p>
+        <div class="btn-group">
+            <button onclick="startGame(2)">2 人</button>
+            <button onclick="startGame(3)">3 人</button>
+            <button onclick="startGame(4)">4 人</button>
         </div>
     </div>
+</div>
 
-    <script src="script.js"></script>
+<header>
+    <div class="header-main">
+        <span class="status-dot"></span> 系統運作中：專案航點記錄器
+    </div>
+</header>
+
+<!-- 玩家切換頁籤 -->
+<nav class="player-tabs" id="playerTabs"></nav>
+
+<main id="appBody">
+    <!-- 內容由 JS 生成 -->
+</main>
+
+<!-- 懸浮地圖工具箱按鈕 -->
+<div class="fab" onclick="toggleSidebar()">
+    <i>🛠️</i>
+    <span>地圖工具</span>
+</div>
+
+<!-- 地圖側欄工具 -->
+<div id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+        <h3>地圖特殊格工具</h3>
+        <button onclick="toggleSidebar()">✕</button>
+    </div>
+    <div class="sidebar-content">
+        <button class="tool-btn" onclick="triggerEvent()">🎲 踩中【？事件格】</button>
+        <div class="tool-divider"></div>
+        <button class="tool-btn" onclick="triggerD2Checkpoint()">🚩 跨越 D2 檢查點</button>
+        <button class="tool-btn" onclick="triggerPromotion()">🆙 進入【晉升格】</button>
+        <button class="tool-btn" onclick="triggerHeadhunt()">🧲 發起【獵人頭】</button>
+    </div>
+</div>
+
+<!-- 彈窗模組 -->
+<div id="modalOverlay" class="overlay flex-center" style="display:none;">
+    <div class="modal">
+        <h2 id="modalTitle">標題</h2>
+        <div id="modalContent" class="modal-body">內容</div>
+        <button class="primary-btn" onclick="closeModal()">確認</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
