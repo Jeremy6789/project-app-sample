@@ -8,72 +8,91 @@
 </head>
 <body>
 
-<!-- 初始入職畫面 -->
-<div id="setupScreen" class="overlay flex-center">
-    <div class="setup-card">
-        <h1>經理人系統初始化</h1>
-        <p>請輸入您的職稱/姓名</p>
-        <input type="text" id="playerName" placeholder="例如：經理人 Jeremy" class="input-field">
-        <button onclick="initManager()" class="primary-btn" style="margin-top:20px;">啟動管理面板</button>
-    </div>
-</div>
-
-<header>
-    <div id="managerTitle">系統載入中...</div>
-    <div class="status-bar">
-        <span class="dot"></span> 連線中 | 專案進度：OK
-    </div>
+<header id="appHeader" style="display:none;">
+    <div id="managerTitle">系統連線中</div>
+    <div class="status-bar"><span class="dot"></span> 專案進度：正常運行</div>
 </header>
 
-<main id="employeeList">
-    <!-- 員工卡片會動態生成於此 -->
-</main>
+<main id="employeeList"></main>
 
-<!-- 核心：雙重行動掃描器 (預留鏡頭框) -->
-<div id="scannerOverlay" class="overlay flex-center" style="display:none;">
+<!-- 步驟 1：暱稱註冊 -->
+<div id="setupScreen" class="overlay flex-center">
+    <div class="setup-card">
+        <h1 style="color:var(--primary); margin-bottom:10px;">管理系統啟動</h1>
+        <p>請輸入您的暱稱</p>
+        <input type="text" id="playerName" placeholder="您的暱稱" class="input-field">
+        <button onclick="showFirstFollowerScan()" class="primary-btn" style="margin-top:20px;">下一步：掃描首位部屬</button>
+    </div>
+</div>
+
+<!-- 通用掃描器 -->
+<div id="genericScanner" class="overlay flex-center" style="display:none;">
     <div class="scanner-container">
         <div class="scanner-header">
-            <h3>領導行動診斷中...</h3>
-            <p>請將「指令卡」與「支持卡」並排放入框內</p>
+            <h3 id="scanTitle">卡片驗證</h3>
+            <p id="scanDesc">請將卡片放入框內</p>
         </div>
-        
-        <div class="viewfinder-group">
-            <div class="viewfinder" id="vf-directive">
-                <div class="label">指令卡 (I)</div>
-                <div class="scan-line"></div>
-                <input type="text" id="manual-I" placeholder="輸入代碼" class="mini-input">
-            </div>
-            <div class="viewfinder" id="vf-supportive">
-                <div class="label">支持卡 (S)</div>
-                <div class="scan-line"></div>
-                <input type="text" id="manual-S" placeholder="輸入代碼" class="mini-input">
-            </div>
+        <div class="viewfinder" style="width:200px; height:280px; margin: 20px auto;">
+            <div id="scanLabel" class="label">SCAN CARD</div>
+            <div class="scan-line"></div>
+            <input type="text" id="generic-code" placeholder="輸入代碼 (可省略-)" class="mini-input">
         </div>
-
         <div class="scanner-footer">
-            <button onclick="processScan()" class="primary-btn">確認掃描組合</button>
-            <button onclick="closeScanner()" class="secondary-btn">取消返回</button>
+            <button id="scanConfirmBtn" class="primary-btn">確認並驗證</button>
+            <button id="scanCancelBtn" class="secondary-btn">取消/略過</button>
         </div>
     </div>
 </div>
 
-<!-- 側欄與彈窗保持原樣但邏輯優化 -->
-<div class="fab" onclick="toggleSidebar()">🛠️ 地圖工具</div>
+<!-- 領導行動掃描器 (I + S) -->
+<div id="actionScanner" class="overlay flex-center" style="display:none;">
+    <div class="scanner-container">
+        <div class="scanner-header">
+            <h3>領導行動診斷</h3>
+            <p>請將「指令」與「支持」卡並放</p>
+        </div>
+        <div class="viewfinder-group">
+            <div class="viewfinder" style="width:140px; height:220px;">
+                <div class="label">指令卡 (I)</div>
+                <div class="scan-line"></div>
+                <input type="text" id="manual-I" placeholder="代碼" class="mini-input">
+            </div>
+            <div class="viewfinder" style="width:140px; height:220px;">
+                <div class="label">支持卡 (S)</div>
+                <div class="scan-line"></div>
+                <input type="text" id="manual-S" placeholder="代碼" class="mini-input">
+            </div>
+        </div>
+        <div class="scanner-footer">
+            <button onclick="processActionScan()" class="primary-btn">執行行動</button>
+            <button onclick="closeActionScanner()" class="secondary-btn">取消</button>
+        </div>
+    </div>
+</div>
+
+<!-- 地圖工具箱 -->
+<div id="fabBtn" class="fab" onclick="toggleSidebar()" style="display:none;">🛠️ 地圖工具</div>
 <div id="sidebar" class="sidebar">
     <div class="sidebar-header"><h3>地圖工具箱</h3><button onclick="toggleSidebar()">✕</button></div>
     <div class="sidebar-content">
+        <button class="tool-btn" onclick="triggerHeadhunt()" style="background:#6e40c9; color:white;">🎯 處理【獵人頭】</button>
+        <button class="tool-btn danger-btn" onclick="triggerCrisis()">🌋 踩中【職場危機】</button>
+        <button class="tool-btn warning-btn" onclick="triggerTraining()">🏫 踩中【總部進修】</button>
+        <button class="tool-btn success-btn" onclick="triggerPromotion()">🆙 踩中【晉升格】</button>
+        <div style="margin:15px 0; border-top:1px solid var(--border);"></div>
+        <button class="tool-btn" onclick="openNewFollowerScan()">➕ 招募新部屬</button>
         <button class="tool-btn" onclick="triggerEvent()">🎲 踩中【？事件格】</button>
-        <button class="tool-btn" onclick="triggerD2()">🚩 跨越 D2 檢查點</button>
-        <button class="tool-btn" onclick="triggerPromotion()">🆙 進入【晉升格】</button>
-        <button class="tool-btn" onclick="addEmployee()">➕ 招募第二位員工</button>
     </div>
 </div>
 
+<!-- 通用彈窗 -->
 <div id="modalOverlay" class="overlay flex-center" style="display:none;">
     <div class="modal">
         <h2 id="modalTitle"></h2>
         <div id="modalContent" class="modal-body"></div>
-        <button class="primary-btn" onclick="closeModal()">確認</button>
+        <div id="modalActions" class="modal-footer">
+            <!-- 按鈕由 JS 動態注入 -->
+        </div>
     </div>
 </div>
 
