@@ -5,212 +5,147 @@ const CONFIG = {
         D3: ["功能做好了，但你能幫我詳細檢查一次嗎？我怕出錯。", "我不確定這樣決策對不對，你要不要再看過？"],
         D4: ["風險已排除，進度如期。這件事交給我，放心。", "我已經準備好兩套方案，目前正執行中。"]
     },
-    events: [
-        "【資源補給】立刻獲得 2 枚 AP 幣。",
-        "【跨部門合作】邀請對手，各付 2 AP，雙方員工皆進 3 步。",
-        "【技術革命】全場 D3/D4 員工，立即退化至 D2！",
-        "【組織重整】全體 D2+ 員工退 1 級，信任值 -1。",
-        "【福利日】全員士氣提升！全場員工信任值 +1。",
-        "【獵頭情報】獲得一次無消耗且無條件成功的獵頭機會。"
-    ]
+    events: ["【資源補給】獲得 2 AP", "【技術革命】D3/D4 退化至 D2", "【福利日】全員信任 +1", "【獵頭情報】獲得免試獵頭機會"]
 };
 
-let state = {
-    players: [],
-    currentP: 0,
-    globalRegression: false
+let managerData = {
+    name: "",
+    employees: [],
+    activeEmpIdx: null // 目前正在掃描哪位員工
 };
 
-// --- 初始化 ---
-function startGame(num) {
-    state.players = [];
-    for(let i=1; i<=num; i++) {
-        state.players.push({
-            name: `經理人 ${i}`,
-            employees: [
-                { id:1, name: "員工一號", bus: {d:1, xp:0}, adm: {d:1, xp:0}, trust: 0, active: true },
-                { id:2, name: "員工二號", bus: {d:1, xp:0}, adm: {d:1, xp:0}, trust: 0, active: false }
-            ]
-        });
-    }
+// --- 初始化經理人 ---
+function initManager() {
+    const name = document.getElementById('playerName').value;
+    if(!name) return alert("請輸入姓名");
+    managerData.name = name;
+    document.getElementById('managerTitle').innerText = `經理人：${name}`;
+    
+    // 預設給予一位員工
+    managerData.employees.push({
+        name: "工程師 阿強", bus: {d:1, xp:0}, adm: {d:1, xp:0}, trust: 0
+    });
+    
     document.getElementById('setupScreen').style.display = 'none';
-    renderTabs();
-    renderContent();
+    renderEmployees();
 }
 
-function renderTabs() {
-    const nav = document.getElementById('playerTabs');
-    nav.innerHTML = state.players.map((p, i) => `
-        <div class="tab ${i === state.currentP ? 'active' : ''}" onclick="switchP(${i})">${p.name}</div>
+function renderEmployees() {
+    const list = document.getElementById('employeeList');
+    list.innerHTML = managerData.employees.map((emp, idx) => `
+        <div class="emp-card">
+            <div style="display:flex; justify-content:space-between;">
+                <b>📂 ${emp.name}</b>
+                <span style="color:#d29922;">信任: ${emp.trust}</span>
+            </div>
+            <div class="heart-voice" id="voice_${idx}">點擊診斷聽取員工心聲...</div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <button onclick="diagnose(${idx}, 'bus')" class="secondary-btn">診斷：業務</button>
+                <button onclick="diagnose(${idx}, 'adm')" class="secondary-btn">診斷：行政</button>
+            </div>
+            <button onclick="openScanner(${idx})" class="primary-btn" style="margin-top:15px;">🔍 啟動領導行動掃描</button>
+        </div>
     `).join('');
 }
 
-function switchP(i) {
-    state.currentP = i;
-    renderTabs();
-    renderContent();
-}
-
-function renderContent() {
-    const main = document.getElementById('appBody');
-    const p = state.players[state.currentP];
-    
-    main.innerHTML = p.employees.map((emp, idx) => {
-        if (!emp.active) {
-            return `<div class="emp-card" style="opacity:0.5; text-align:center;">
-                        <p>員工二號（尚未解鎖）</p>
-                        <button class="secondary-btn" onclick="unlockEmp(${idx})">跑完第一圈：解鎖部屬</button>
-                    </div>`;
-        }
-        return `
-            <div class="emp-card">
-                <div class="emp-header">
-                    <span style="font-weight:bold;">📂 ${emp.name}</span>
-                    <span class="trust-ui">信任值: ${emp.trust}</span>
-                </div>
-                
-                <div class="skill-box">
-                    <label>診斷技能項目</label>
-                    <select id="skill_${idx}" class="secondary-btn" style="background:#0d1117; text-align:left;">
-                        <option value="bus">業務執行 (Business)</option>
-                        <option value="adm">行政管理 (Admin)</option>
-                    </select>
-                    <button class="secondary-btn" onclick="showHeart(${idx})">🎧 聆聽心聲</button>
-                    <div id="voice_${idx}" class="heart-voice"></div>
-                </div>
-
-                <div class="input-row">
-                    <div><label>指令代碼</label><input id="i_${idx}" placeholder="I-01"></div>
-                    <div><label>支持代碼</label><input id="s_${idx}" placeholder="S-01"></div>
-                </div>
-                <button class="primary-btn" onclick="execute(${idx})">發動領導行動</button>
-            </div>
-        `;
-    }).join('');
-}
-
-// --- 核心逻辑 ---
-
-function showHeart(idx) {
-    const emp = state.players[state.currentP].employees[idx];
-    const skillKey = document.getElementById(`skill_${idx}`).value;
-    const dLevel = emp[skillKey].d;
+// --- 診斷邏輯 ---
+let currentSkill = 'bus'; // 紀錄目前診斷哪項技能
+function diagnose(idx, skill) {
+    currentSkill = skill;
+    const emp = managerData.employees[idx];
+    const dLevel = emp[skill].d;
     const pool = CONFIG.dialogues[`D${dLevel}`];
     const text = pool[Math.floor(Math.random() * pool.length)];
     
-    const box = document.getElementById(`voice_${idx}`);
-    box.innerText = `「${text}」`;
-    box.style.display = 'block';
+    document.getElementById(`voice_${idx}`).innerText = `「${text}」 (針對${skill === 'bus' ? '業務' : '行政'})`;
+    document.getElementById(`voice_${idx}`).style.color = "#c9d1d9";
 }
 
-function execute(idx) {
-    const iVal = document.getElementById(`i_${idx}`).value.trim().toUpperCase();
-    const sVal = document.getElementById(`s_${idx}`).value.trim().toUpperCase();
-    
-    if(!iVal || !sVal) return alert("請輸入代碼");
+// --- 掃描器邏輯 ---
+function openScanner(idx) {
+    managerData.activeEmpIdx = idx;
+    document.getElementById('scannerOverlay').style.display = 'flex';
+}
 
-    // 代碼轉譯 (01-10 High, 其餘 Low)
+function closeScanner() {
+    document.getElementById('scannerOverlay').style.display = 'none';
+}
+
+function processScan() {
+    const idx = managerData.activeEmpIdx;
+    const iVal = document.getElementById('manual-I').value.trim().toUpperCase();
+    const sVal = document.getElementById('manual-S').value.trim().toUpperCase();
+
+    if(!iVal || !sVal) return alert("請輸入卡片代碼 (模擬掃描)");
+
+    // 轉譯邏輯 (01-10 High, 其餘 Low)
     const getLvl = (str) => parseInt(str.replace(/\D/g,'')) <= 10 ? 'H' : 'L';
     const directive = getLvl(iVal);
     const supportive = getLvl(sVal);
 
-    let sStyle = 0, styleName = "", ap = 0;
-    if(directive === 'H' && supportive === 'L') { sStyle = 1; styleName = "S1 指導"; ap = 2; }
-    else if(directive === 'H' && supportive === 'H') { sStyle = 2; styleName = "S2 教練"; ap = 2; }
-    else if(directive === 'L' && supportive === 'H') { sStyle = 3; styleName = "S3 支持"; ap = 1; }
-    else { sStyle = 4; styleName = "S4 授權"; ap = 0; }
+    let sStyle = 0, styleName = "";
+    if(directive === 'H' && supportive === 'L') { sStyle = 1; styleName = "S1 指導"; }
+    else if(directive === 'H' && supportive === 'H') { sStyle = 2; styleName = "S2 教練"; }
+    else if(directive === 'L' && supportive === 'H') { sStyle = 3; styleName = "S3 支持"; }
+    else { sStyle = 4; styleName = "S4 授權"; }
 
-    const emp = state.players[state.currentP].employees[idx];
-    const skillKey = document.getElementById(`skill_${idx}`).value;
-    const realD = emp[skillKey].d;
+    const emp = managerData.employees[idx];
+    const realD = emp[currentSkill].d;
 
     let title, content;
     const dice = realD <= 2 ? "d6" : (realD === 3 ? "d8" : "d12");
 
     if(sStyle === realD) {
         title = "🎉 完美匹配！";
-        content = `風格：${styleName}<br><b>效果：</b>信任 +1，消耗 ${ap} AP。<br><b>地圖動作：</b>請擲 1 次 <b>${dice}</b>。`;
+        content = `你使用了 <b>${styleName}</b>。<br>信任 +1。請擲 <b>${dice}</b> 移動棋子。`;
         emp.trust = Math.min(3, emp.trust + 1);
-        emp[skillKey].xp += 2; // 增加隱藏XP
+        emp[currentSkill].xp += 2;
     } else if(Math.abs(sStyle - realD) === 1) {
         title = "⚠️ 輕微偏離";
-        content = `風格：${styleName}<br><b>效果：</b>消耗 ${ap} AP。<br><b>地圖動作：</b>請擲 1 次 <b>${dice}</b> 但<b>步數減半</b>。`;
-        emp[skillKey].xp += 1;
+        content = `使用了 ${styleName}。<br>請擲 <b>${dice}</b> 但<b>步數減半</b>。`;
+        emp[currentSkill].xp += 1;
     } else {
         title = "❌ 嚴重錯位";
-        content = `風格：${styleName}<br><b>效果：</b>信任 -1，消耗 ${ap} AP。<br><b>地圖動作：原地停留</b>。`;
+        content = `風格錯誤！<br>信任 -1，<b>原地停留</b>。`;
         emp.trust = Math.max(-3, emp.trust - 1);
     }
 
+    closeScanner();
     openModal(title, content);
-    renderContent();
+    renderEmployees();
 }
 
 // --- 地圖工具 ---
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+
+function addEmployee() {
+    managerData.employees.push({ name: "新進員工", bus: {d:1, xp:0}, adm: {d:1, xp:0}, trust: 0 });
+    renderEmployees();
+    toggleSidebar();
+    alert("新員工已加入您的團隊！");
+}
 
 function triggerEvent() {
     const ev = CONFIG.events[Math.floor(Math.random() * CONFIG.events.length)];
-    openModal("🎲 隨機事件抽取", ev);
+    openModal("🎲 事件抽取", ev);
 }
 
-function triggerD2Checkpoint() {
-    openModal("🚩 D2 幻滅檢查點", "請確認是否已跨越第 6 格？<br><br><button class='primary-btn' onclick='applyD2()'>確認：轉為 D2 階段</button>");
-}
-
-function applyD2() {
-    const p = state.players[state.currentP];
-    p.employees.forEach(e => {
-        if(e.active) {
-            if(e.bus.d === 1) e.bus.d = 2;
-            if(e.adm.d === 1) e.adm.d = 2;
-        }
+function triggerD2() {
+    managerData.employees.forEach(e => {
+        if(e.bus.d === 1) e.bus.d = 2;
+        if(e.adm.d === 1) e.adm.d = 2;
     });
-    closeModal();
-    renderContent();
-    alert("目前玩家所有 D1 技能已轉為 D2 幻滅期");
+    openModal("🚩 階段轉變", "所有 D1 員工已進入 D2 幻滅期");
+    renderEmployees();
 }
 
 function triggerPromotion() {
-    const p = state.players[state.currentP];
-    let html = "選擇要晉升的員工與技能：<br><br>";
-    p.employees.forEach((e, i) => {
-        if(e.active) {
-            html += `<button class='secondary-btn' onclick='doPromo(${i},"bus")'>${e.name}-業務 (目前D${e.bus.d})</button>`;
-            html += `<button class='secondary-btn' onclick='doPromo(${i},"adm")'>${e.name}-行政 (目前D${e.adm.d})</button>`;
-        }
-    });
-    openModal("🆙 晉升檢查", html);
+    let msg = "選擇一位 XP 足夠的員工進行晉升。";
+    openModal("🆙 晉升檢查", msg);
 }
 
-function doPromo(empIdx, skill) {
-    const emp = state.players[state.currentP].employees[empIdx];
-    if(emp[skill].d >= 4) return alert("已達最高等級");
-    
-    // 檢查隱藏 XP
-    if(emp[skill].xp >= 5) {
-        emp[skill].d += 1;
-        emp[skill].xp = 0;
-        alert("升級成功！請更換棋子底環並領取新骰子。");
-    } else {
-        alert("XP 不足！(提示：完美匹配可獲得更多 XP)");
-    }
-    closeModal();
-    renderContent();
-}
-
-function triggerHeadhunt() {
-    openModal("🧲 發起獵人頭", "請在桌面上決定目標：<br>1. 支付 2 AP<br>2. 比拼骰子 (發起者 d6 vs 被獵者 d8)<br><br>成功後請至 App 切換員工歸屬。");
-}
-
-function unlockEmp(idx) {
-    state.players[state.currentP].employees[idx].active = true;
-    renderContent();
-    alert("新員工已入職！");
-}
-
-// --- 通用 UI ---
-
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); }
+// --- Modal ---
 function openModal(t, c) {
     document.getElementById('modalTitle').innerHTML = t;
     document.getElementById('modalContent').innerHTML = c;
