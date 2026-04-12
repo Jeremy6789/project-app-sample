@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>職涯領航員 | 應急教具箱</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --primary: #bb86fc;
+            --event: #03dac6;
+            --text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            min-height: 100vh;
+        }
+
+        h1 { font-size: 1.2rem; opacity: 0.7; margin-bottom: 30px; }
+
+        /* 骰子區塊 */
+        .dice-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 40px;
+        }
+
+        .dice-btn {
+            background: var(--card);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .dice-btn:active { transform: scale(0.95); background: #333; }
+
+        .dice-name { font-size: 0.8rem; color: var(--primary); margin-bottom: 10px; }
+        .dice-result { font-size: 2.5rem; font-weight: bold; min-height: 60px; }
+
+        /* 事件卡區塊 */
+        .event-section {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .event-card {
+            background: var(--card);
+            border: 2px solid var(--event);
+            border-radius: 15px;
+            padding: 40px 20px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .event-title { font-size: 1.5rem; font-weight: bold; color: var(--event); margin-bottom: 15px; }
+        .event-desc { font-size: 1rem; line-height: 1.5; color: #ccc; }
+
+        .draw-btn {
+            background: var(--event);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .draw-btn:active { opacity: 0.8; }
+        
+        .history { margin-top: 20px; font-size: 0.8rem; color: #666; }
+    </style>
+</head>
+<body>
+
+    <h1>Career Pilot | 數位教具箱</h1>
+
+    <!-- 骰子區 -->
+    <div class="dice-grid">
+        <div class="dice-btn" onclick="rollDice(6, 'res6')">
+            <div class="dice-name">D6</div>
+            <div class="dice-result" id="res6">?</div>
+        </div>
+        <div class="dice-btn" onclick="rollDice(8, 'res8')">
+            <div class="dice-name">D8</div>
+            <div class="dice-result" id="res8">?</div>
+        </div>
+        <div class="dice-btn" onclick="rollDice(10, 'res10')">
+            <div class="dice-name">D10</div>
+            <div class="dice-result" id="res10">?</div>
+        </div>
+    </div>
+
+    <!-- 事件卡區 -->
+    <div class="event-section">
+        <div class="event-card" id="eventCard">
+            <div class="event-title">準備就緒</div>
+            <div class="event-desc">點擊下方按鈕抽取本回合環境卡</div>
+        </div>
+        <button class="draw-btn" onclick="drawEvent()">抽取事件卡</button>
+        <div class="history" id="history">尚未抽取</div>
+    </div>
+
+    <script>
+        // 15張牌庫 (黃金比例分配)
+        const eventDeck = [
+            { t: "E01 技術革命", d: "高階能力受損！全場 D3/D4 員工強制退化至 D2 階段。" },
+            { t: "E01 技術革命", d: "高階能力受損！全場 D3/D4 員工強制退化至 D2 階段。" },
+            { t: "E02 組織重整", d: "環境動盪！全員等級退 1 級，信任值 -1。" },
+            { t: "E02 組織重整", d: "環境動盪！全員等級退 1 級，信任值 -1。" },
+            { t: "E03 福利日", d: "士氣大振！全場員工信任值 +1。" },
+            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
+            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
+            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
+            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
+            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
+            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
+            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
+            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
+            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
+            { t: "獵頭情報", d: "掌握破口！獲得一次無消耗且無條件成功的獵人頭機會。" }
+        ];
+
+        function rollDice(sides, elementId) {
+            const resultEl = document.getElementById(elementId);
+            resultEl.style.opacity = "0.3"; // 模擬滾動感
+            
+            setTimeout(() => {
+                const roll = Math.floor(Math.random() * sides) + 1;
+                resultEl.innerText = roll;
+                resultEl.style.opacity = "1";
+            }, 150);
+        }
+
+        function drawEvent() {
+            const cardEl = document.getElementById('eventCard');
+            const titleEl = cardEl.querySelector('.event-title');
+            const descEl = cardEl.querySelector('.event-desc');
+            const historyEl = document.getElementById('history');
+
+            // 隨機抽取
+            const card = eventDeck[Math.floor(Math.random() * eventDeck.length)];
+            
+            titleEl.innerText = card.t;
+            descEl.innerText = card.d;
+            historyEl.innerText = "上一張： " + card.t;
+
+            // 簡單動畫
+            cardEl.style.transform = "rotateY(360deg)";
+            cardEl.style.transition = "0.5s";
+            setTimeout(() => { cardEl.style.transform = "rotateY(0deg)"; }, 500);
+        }
+    </script>
+</body>
+</html>
