@@ -13,6 +13,12 @@
     <div class="status-bar"><span class="dot"></span> 專案進度：正常運行</div>
 </header>
 
+<!-- 全局效應橫幅 -->
+<div id="globalStatusBanner" class="global-banner" style="display:none;">
+    <span id="globalStatusText">全局效應提醒</span>
+    <button class="banner-close-btn" onclick="closeBanner()">✕</button>
+</div>
+
 <main id="employeeList"></main>
 
 <!-- 步驟 1：暱稱註冊 -->
@@ -25,7 +31,7 @@
     </div>
 </div>
 
-<!-- 通用掃描器 -->
+<!-- 通用掃描器 (卡片驗證) -->
 <div id="genericScanner" class="overlay flex-center" style="display:none;">
     <div class="scanner-container">
         <div class="scanner-header">
@@ -35,7 +41,7 @@
         <div class="viewfinder" style="width:200px; height:280px; margin: 20px auto;">
             <div id="scanLabel" class="label">SCAN CARD</div>
             <div class="scan-line"></div>
-            <input type="text" id="generic-code" placeholder="輸入代碼 (可省略-)" class="mini-input">
+            <input type="text" id="generic-code" placeholder="範例代碼" class="mini-input">
         </div>
         <div class="scanner-footer">
             <button id="scanConfirmBtn" class="primary-btn">確認並驗證</button>
@@ -55,16 +61,16 @@
             <div class="viewfinder" style="width:140px; height:220px;">
                 <div class="label">指令卡 (I)</div>
                 <div class="scan-line"></div>
-                <input type="text" id="manual-I" placeholder="代碼" class="mini-input">
+                <input type="text" id="manual-I" placeholder="範例：I01" class="mini-input">
             </div>
             <div class="viewfinder" style="width:140px; height:220px;">
                 <div class="label">支持卡 (S)</div>
                 <div class="scan-line"></div>
-                <input type="text" id="manual-S" placeholder="代碼" class="mini-input">
+                <input type="text" id="manual-S" placeholder="範例：S01" class="mini-input">
             </div>
         </div>
         <div class="scanner-footer">
-            <button onclick="processActionScan()" class="primary-btn">執行行動</button>
+            <button onclick="processActionScan()" class="primary-btn">執行領導行動</button>
             <button onclick="closeActionScanner()" class="secondary-btn">取消</button>
         </div>
     </div>
@@ -75,6 +81,8 @@
 <div id="sidebar" class="sidebar">
     <div class="sidebar-header"><h3>地圖工具箱</h3><button onclick="toggleSidebar()">✕</button></div>
     <div class="sidebar-content">
+        <button class="tool-btn" onclick="openGlobalEventInput()" style="background:#d29922; color:white;">🌍 同步全局事件</button>
+        <button class="tool-btn" onclick="triggerBonusCard()" style="background:#0969da; color:white;">💰【獎金卡】效果</button>
         <button class="tool-btn" onclick="triggerHeadhunt()" style="background:#6e40c9; color:white;">🎯 處理【獵人頭】</button>
         <button class="tool-btn danger-btn" onclick="triggerCrisis()">🌋 踩中【職場危機】</button>
         <button class="tool-btn warning-btn" onclick="triggerTraining()">🏫 踩中【總部進修】</button>
@@ -90,9 +98,7 @@
     <div class="modal">
         <h2 id="modalTitle"></h2>
         <div id="modalContent" class="modal-body"></div>
-        <div id="modalActions" class="modal-footer">
-            <!-- 按鈕由 JS 動態注入 -->
-        </div>
+        <div id="modalActions" class="modal-footer"></div>
     </div>
 </div>
 
