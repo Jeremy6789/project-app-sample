@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>情境領導桌遊 臨時工具箱</title>
+    <title>職涯領航員 2.0 | 數位教具箱</title>
     <style>
         :root {
-            --bg: #121212;
-            --card: #1e1e1e;
-            --primary: #bb86fc;
-            --event: #03dac6;
-            --text: #ffffff;
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --primary: #58a6ff;
+            --personal: #238636;
+            --global: #da3633;
+            --text: #c9d1d9;
         }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -26,31 +28,70 @@
             min-height: 100vh;
         }
 
-        h1 { font-size: 1.2rem; opacity: 0.7; margin-bottom: 30px; }
+        h1 { font-size: 1.1rem; opacity: 0.8; margin-bottom: 20px; color: var(--primary); letter-spacing: 1px; }
 
-        /* 骰子區塊 */
-        .dice-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
+        /* 骰子控制區 */
+        .dice-section {
             width: 100%;
             max-width: 400px;
-            margin-bottom: 40px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
         }
 
-        .dice-btn {
-            background: var(--card);
-            border: 2px solid var(--primary);
-            border-radius: 12px;
-            padding: 20px 10px;
-            text-align: center;
+        .qty-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .qty-btn {
+            background: #21262d;
+            border: 1px solid var(--border);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
             cursor: pointer;
         }
 
-        .dice-btn:active { transform: scale(0.95); background: #333; }
+        #diceQty { font-size: 1.5rem; font-weight: bold; width: 30px; }
 
-        .dice-name { font-size: 0.8rem; color: var(--primary); margin-bottom: 10px; }
-        .dice-result { font-size: 2.5rem; font-weight: bold; min-height: 60px; }
+        .dice-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .roll-btn {
+            background: #21262d;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .roll-btn:active { background: var(--primary); color: white; }
+
+        #diceDisplay {
+            margin-top: 20px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .individual-dice { font-size: 1rem; color: #8b949e; margin-bottom: 5px; }
+        .dice-sum { font-size: 3rem; font-weight: bold; color: white; }
 
         /* 事件卡區塊 */
         .event-section {
@@ -61,115 +102,167 @@
 
         .event-card {
             background: var(--card);
-            border: 2px solid var(--event);
+            border: 2px solid var(--border);
             border-radius: 15px;
-            padding: 40px 20px;
-            min-height: 150px;
+            padding: 30px 20px;
+            min-height: 180px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transition: 0.3s;
         }
 
-        .event-title { font-size: 1.5rem; font-weight: bold; color: var(--event); margin-bottom: 15px; }
-        .event-desc { font-size: 1rem; line-height: 1.5; color: #ccc; }
+        .event-type-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 10px;
+            align-self: center;
+        }
+
+        .tag-personal { background: var(--personal); color: white; }
+        .tag-global { background: var(--global); color: white; }
+
+        .event-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; }
+        .event-desc { font-size: 0.95rem; line-height: 1.6; color: #8b949e; }
 
         .draw-btn {
-            background: var(--event);
-            color: #000;
+            background: var(--primary);
+            color: white;
             border: none;
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 1.2rem;
+            padding: 18px;
+            border-radius: 8px;
+            font-size: 1.1rem;
             font-weight: bold;
             width: 100%;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        .draw-btn:active { opacity: 0.8; }
-        
-        .history { margin-top: 20px; font-size: 0.8rem; color: #666; }
+        .history { margin-top: 20px; font-size: 0.8rem; color: #484f58; }
     </style>
 </head>
 <body>
 
-    <h1>臨時工具箱</h1>
+    <h1>CAREER PILOT 2.0 應急箱</h1>
 
     <!-- 骰子區 -->
-    <div class="dice-grid">
-        <div class="dice-btn" onclick="rollDice(6, 'res6')">
-            <div class="dice-name">D6</div>
-            <div class="dice-result" id="res6">?</div>
+    <div class="dice-section">
+        <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 10px;">設定產出骰子數量</div>
+        <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty(-1)">-</button>
+            <div id="diceQty">1</div>
+            <button class="qty-btn" onclick="changeQty(1)">+</button>
         </div>
-        <div class="dice-btn" onclick="rollDice(8, 'res8')">
-            <div class="dice-name">D8</div>
-            <div class="dice-result" id="res8">?</div>
+        <div class="dice-btns">
+            <button class="roll-btn" onclick="rollDice(3)">D3 (半對/基礎)</button>
+            <button class="roll-btn" onclick="rollDice(6)">D6 (進階/組合)</button>
         </div>
-        <div class="dice-btn" onclick="rollDice(10, 'res10')">
-            <div class="dice-name">D10</div>
-            <div class="dice-result" id="res10">?</div>
+        <div id="diceDisplay">
+            <div class="individual-dice" id="diceDetail">等待擲骰...</div>
+            <div class="dice-sum" id="diceSum">-</div>
         </div>
     </div>
 
     <!-- 事件卡區 -->
     <div class="event-section">
         <div class="event-card" id="eventCard">
-            <div class="event-title">準備就緒</div>
-            <div class="event-desc">點擊下方按鈕抽取本回合環境卡</div>
+            <div id="eventTag"></div>
+            <div class="event-title" id="eventTitle">準備就緒</div>
+            <div class="event-desc" id="eventDesc">點擊下方按鈕抽取【？事件卡】</div>
         </div>
-        <button class="draw-btn" onclick="drawEvent()">抽取事件卡</button>
+        <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (15張剩餘: <span id="deckCount">15</span>)</button>
         <div class="history" id="history">尚未抽取</div>
     </div>
 
     <script>
-        // 15張牌庫 (黃金比例分配)
-        const eventDeck = [
-            { t: "E01 技術革命", d: "高階能力受損！全場 D3/D4 員工強制退化至 D2 階段。" },
-            { t: "E01 技術革命", d: "高階能力受損！全場 D3/D4 員工強制退化至 D2 階段。" },
-            { t: "E02 組織重整", d: "環境動盪！全員等級退 1 級，信任值 -1。" },
-            { t: "E02 組織重整", d: "環境動盪！全員等級退 1 級，信任值 -1。" },
-            { t: "E03 福利日", d: "士氣大振！全場員工信任值 +1。" },
-            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
-            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
-            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
-            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
-            { t: "資源補給", d: "經理人獲得額外資助：立即從銀行獲得 2 枚 AP 幣。" },
-            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
-            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
-            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
-            { t: "跨部門合作", d: "協作機會！邀請一位對手，雙方各付 2 AP，兩位員工皆前進 3 步。" },
-            { t: "獵頭情報", d: "掌握破口！獲得一次無消耗且無條件成功的獵人頭機會。" }
-        ];
-
-        function rollDice(sides, elementId) {
-            const resultEl = document.getElementById(elementId);
-            resultEl.style.opacity = "0.3"; // 模擬滾動感
-            
-            setTimeout(() => {
-                const roll = Math.floor(Math.random() * sides) + 1;
-                resultEl.innerText = roll;
-                resultEl.style.opacity = "1";
-            }, 150);
+        // 骰子邏輯
+        let currentQty = 1;
+        function changeQty(v) {
+            currentQty = Math.max(1, Math.min(4, currentQty + v));
+            document.getElementById('diceQty').innerText = currentQty;
         }
 
-        function drawEvent() {
-            const cardEl = document.getElementById('eventCard');
-            const titleEl = cardEl.querySelector('.event-title');
-            const descEl = cardEl.querySelector('.event-desc');
-            const historyEl = document.getElementById('history');
-
-            // 隨機抽取
-            const card = eventDeck[Math.floor(Math.random() * eventDeck.length)];
+        function rollDice(sides) {
+            const detailEl = document.getElementById('diceDetail');
+            const sumEl = document.getElementById('diceSum');
             
+            let results = [];
+            let sum = 0;
+            
+            for(let i=0; i<currentQty; i++) {
+                let res = Math.floor(Math.random() * sides) + 1;
+                results.push(res);
+                sum += res;
+            }
+
+            detailEl.innerText = results.join(' + ');
+            sumEl.innerText = sum;
+
+            // 震動回饋 (手機支援的話)
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        // 15張牌庫 (嚴格依照規則比例)
+        const initialDeck = [
+            // 個人機遇 (10張)
+            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
+            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
+            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
+            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
+            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
+            { t: "獵頭情報", d: "獲得一次「無消耗」且「無條件成功」的獵人頭機會 (需符合顏色限制)。", type: "personal" },
+            
+            // 全局震撼彈 (5張)
+            { t: "E01 技術革命", d: "【全場影響】擁有 D3 或 D4 員工的玩家，下回合出牌必須多付 1 AP。", type: "global" },
+            { t: "E01 技術革命", d: "【全場影響】擁有 D3 或 D4 員工的玩家，下回合出牌必須多付 1 AP。", type: "global" },
+            { t: "E02 組織重整", d: "【全場影響】全場所有玩家主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
+            { t: "E02 組織重整", d: "【全場影響】全場所有玩家主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
+            { t: "E03 福利日", d: "【全場影響】全員士氣提升！全場所有玩家主管聲望立刻 +1 (最高 3)。", type: "global" }
+        ];
+
+        let currentDeck = [...initialDeck];
+
+        function drawEvent() {
+            if (currentDeck.length === 0) {
+                if(confirm("牌組已抽完，要重新洗牌嗎？")) {
+                    currentDeck = [...initialDeck];
+                } else {
+                    return;
+                }
+            }
+
+            const cardEl = document.getElementById('eventCard');
+            const titleEl = document.getElementById('eventTitle');
+            const descEl = document.getElementById('eventDesc');
+            const tagEl = document.getElementById('eventTag');
+            const historyEl = document.getElementById('history');
+            const countEl = document.getElementById('deckCount');
+
+            // 隨機抽取並移除
+            const index = Math.floor(Math.random() * currentDeck.length);
+            const card = currentDeck.splice(index, 1)[0];
+            
+            // 更新 UI
             titleEl.innerText = card.t;
             descEl.innerText = card.d;
+            tagEl.innerText = card.type === 'personal' ? '🟢 個人機遇' : '🔴 全局震撼彈';
+            tagEl.className = 'event-type-tag ' + (card.type === 'personal' ? 'tag-personal' : 'tag-global');
+            cardEl.style.borderColor = card.type === 'personal' ? 'var(--personal)' : 'var(--global)';
+            
             historyEl.innerText = "上一張： " + card.t;
+            countEl.innerText = currentDeck.length;
 
-            // 簡單動畫
-            cardEl.style.transform = "rotateY(360deg)";
-            cardEl.style.transition = "0.5s";
-            setTimeout(() => { cardEl.style.transform = "rotateY(0deg)"; }, 500);
+            // 卡片動畫
+            cardEl.style.transform = "scale(0.95)";
+            setTimeout(() => { cardEl.style.transform = "scale(1)"; }, 100);
         }
     </script>
 </body>
