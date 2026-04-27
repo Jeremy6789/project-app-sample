@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>職涯領航員 道具</title>
+    <title>職涯領航員 2.0 道具</title>
     <style>
         :root {
             --bg: #0d1117;
@@ -151,14 +151,14 @@
 
     <!-- 骰子區 -->
     <div class="dice-section">
-        <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 10px;">設定產出骰子數量</div>
+        <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 10px;">設定擲骰數量</div>
         <div class="qty-control">
             <button class="qty-btn" onclick="changeQty(-1)">-</button>
             <div id="diceQty">1</div>
             <button class="qty-btn" onclick="changeQty(1)">+</button>
         </div>
         <div class="dice-btns">
-            <button class="roll-btn" onclick="rollDice(3)">D3 (半對/基礎)</button>
+            <button class="roll-btn" onclick="rollDice(3)">D3 (基礎/半對)</button>
             <button class="roll-btn" onclick="rollDice(6)">D6 (進階/組合)</button>
         </div>
         <div id="diceDisplay">
@@ -174,7 +174,7 @@
             <div class="event-title" id="eventTitle">準備就緒</div>
             <div class="event-desc" id="eventDesc">點擊下方按鈕抽取【？事件卡】</div>
         </div>
-        <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (15張剩餘: <span id="deckCount">15</span>)</button>
+        <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (剩餘: <span id="deckCount">15</span>)</button>
         <div class="history" id="history">尚未抽取</div>
     </div>
 
@@ -202,37 +202,39 @@
             detailEl.innerText = results.join(' + ');
             sumEl.innerText = sum;
 
-            // 震動回饋 (手機支援的話)
             if (navigator.vibrate) navigator.vibrate(50);
         }
 
-        // 15張牌庫 (嚴格依照規則比例)
+        // 更新後的 15 張牌庫
         const initialDeck = [
-            // 個人機遇 (10張)
-            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
-            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
-            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
-            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
-            { t: "資源補給", d: "立刻從銀行獲得 2 枚 AP 幣。", type: "personal" },
-            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
-            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
-            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
-            { t: "跨部門合作", d: "邀請一位對手結盟，各付 2 AP。成功後雙方皆前進 3 步，且各獲 +2 積分。", type: "personal" },
-            { t: "獵頭情報", d: "獲得一次「無消耗」且「無條件成功」的獵人頭機會 (需符合顏色限制)。", type: "personal" },
+            // --- 🟢 個人機遇 (10張) ---
+            { t: "資源補給", d: "立刻獲得 2 枚 AP 幣。", type: "personal" },
+            { t: "資源補給", d: "立刻獲得 2 枚 AP 幣。", type: "personal" },
+            { t: "資源補給", d: "立刻獲得 2 枚 AP 幣。", type: "personal" },
             
-            // 全局震撼彈 (5張)
-            { t: "E01 技術革命", d: "【全場影響】擁有 D3 或 D4 員工的玩家，下回合出牌必須多付 1 AP。", type: "global" },
-            { t: "E01 技術革命", d: "【全場影響】擁有 D3 或 D4 員工的玩家，下回合出牌必須多付 1 AP。", type: "global" },
-            { t: "E02 組織重整", d: "【全場影響】全場所有玩家主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
-            { t: "E02 組織重整", d: "【全場影響】全場所有玩家主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
-            { t: "E03 福利日", d: "【全場影響】全員士氣提升！全場所有玩家主管聲望立刻 +1 (最高 3)。", type: "global" }
+            { t: "跨部門合作", d: "邀請一位對手結盟，下回合可用 AP 減 2。結盟成功後，雙方直接前進 3 步，且各獲 +2 積分。", type: "personal" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，下回合可用 AP 減 2。結盟成功後，雙方直接前進 3 步，且各獲 +2 積分。", type: "personal" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，下回合可用 AP 減 2。結盟成功後，雙方直接前進 3 步，且各獲 +2 積分。", type: "personal" },
+            
+            { t: "爆品誕生", d: "直接獲得 +4 分。可選將此 4 分與一位對手平分 (各+2)，若平分，則雙方主管聲望皆 +1。", type: "personal" },
+            { t: "爆品誕生", d: "直接獲得 +4 分。可選將此 4 分與一位對手平分 (各+2)，若平分，則雙方主管聲望皆 +1。", type: "personal" },
+            { t: "爆品誕生", d: "直接獲得 +4 分。可選將此 4 分與一位對手平分 (各+2)，若平分，則雙方主管聲望皆 +1。", type: "personal" },
+            
+            { t: "獵頭情報", d: "獲得一次「無消耗 (免付 2 AP)」且「無條件成功」的獵人頭機會 (仍受四色各一限制)。", type: "personal" },
+
+            // --- 🔴 全局震撼彈 (5張) ---
+            { t: "E01 技術革命", d: "【全場】擁有 D3 或 D4 員工的玩家，下回合出牌時必須額外多支付 1 AP。", type: "global" },
+            { t: "E01 技術革命", d: "【全場】擁有 D3 或 D4 員工的玩家，下回合出牌時必須額外多支付 1 AP。", type: "global" },
+            { t: "E02 組織重整", d: "【全場】全體動盪！所有玩家的主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
+            { t: "E02 組織重整", d: "【全場】全體動盪！所有玩家的主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
+            { t: "E03 福利日", d: "【全場】全員士氣提升！全體玩家主管聲望立刻 +1 (最高不超過 3)。", type: "global" }
         ];
 
         let currentDeck = [...initialDeck];
 
         function drawEvent() {
             if (currentDeck.length === 0) {
-                if(confirm("牌組已抽完，要重新洗牌嗎？")) {
+                if(confirm("事件牌組已抽完，要重新洗牌嗎？")) {
                     currentDeck = [...initialDeck];
                 } else {
                     return;
@@ -246,11 +248,9 @@
             const historyEl = document.getElementById('history');
             const countEl = document.getElementById('deckCount');
 
-            // 隨機抽取並移除
             const index = Math.floor(Math.random() * currentDeck.length);
             const card = currentDeck.splice(index, 1)[0];
             
-            // 更新 UI
             titleEl.innerText = card.t;
             descEl.innerText = card.d;
             tagEl.innerText = card.type === 'personal' ? '🟢 個人機遇' : '🔴 全局震撼彈';
@@ -260,7 +260,6 @@
             historyEl.innerText = "上一張： " + card.t;
             countEl.innerText = currentDeck.length;
 
-            // 卡片動畫
             cardEl.style.transform = "scale(0.95)";
             setTimeout(() => { cardEl.style.transform = "scale(1)"; }, 100);
         }
