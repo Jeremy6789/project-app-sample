@@ -175,7 +175,7 @@
             <div class="event-title" id="eventTitle">準備就緒</div>
             <div class="event-desc" id="eventDesc">請踩中【？事件格】的玩家點擊抽取</div>
         </div>
-        <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (剩餘: <span id="deckCount">15</span>)</button>
+        <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (剩餘: <span id="deckCount">--</span>)</button>
         <div class="history" id="history">尚未抽取</div>
     </div>
 
@@ -202,39 +202,38 @@
             if (navigator.vibrate) navigator.vibrate(50);
         }
 
-        // --- 15張事件牌庫更新 ---
+        // --- 15張事件牌庫 ---
         const initialDeck = [
-            // 🟢 個人機遇與增益 (10張)
             { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
             { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
             { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
-            
             { t: "爆品誕生", d: "直接獲得 +2 聲望。你可選擇將成果分給一位對手結盟，若這麼做，雙方聲望皆 +2。", type: "buff" },
             { t: "爆品誕生", d: "直接獲得 +2 聲望。你可選擇將成果分給一位對手結盟，若這麼做，雙方聲望皆 +2。", type: "buff" },
             { t: "爆品誕生", d: "直接獲得 +2 聲望。你可選擇將成果分給一位對手結盟，若這麼做，雙方聲望皆 +2。", type: "buff" },
-            
             { t: "跨部門合作", d: "邀請一位對手結盟，若對方同意，雙方的經理人棋子直接前進 3 步，且雙方聲望各 +1。", type: "buff" },
             { t: "跨部門合作", d: "邀請一位對手結盟，若對方同意，雙方的經理人棋子直接前進 3 步，且雙方聲望各 +1。", type: "buff" },
             { t: "跨部門合作", d: "邀請一位對手結盟，若對方同意，雙方的經理人棋子直接前進 3 步，且雙方聲望各 +1。", type: "buff" },
-            
             { t: "獵頭情報", d: "獲得一次「必勝」的獵頭機會（免擲骰奪走）；或必勝的防禦機會（被獵時免擲骰防禦）。", type: "buff" },
-
-            // 🔴 個人挑戰與危機 (5張)
             { t: "突發技術瓶頸", d: "專案卡關耗費心神，在您的「下一個回合」補牌時，手牌上限暫時降為 4 張。", type: "debuff" },
             { t: "突發技術瓶頸", d: "專案卡關耗費心神，在您的「下一個回合」補牌時，手牌上限暫時降為 4 張。", type: "debuff" },
-            
             { t: "部門預算縮減", d: "團隊士氣受打擊。你的主管聲望立刻 -1（可立刻打出「責備卡」抵銷）。", type: "debuff" },
             { t: "部門預算縮減", d: "團隊士氣受打擊。你的主管聲望立刻 -1（可立刻打出「責備卡」抵銷）。", type: "debuff" },
-            
             { t: "核心員工倦怠", d: "您陣營中目前 D 等級最高的一名員工被強迫休假，下一個回合無法被派上場。", type: "debuff" }
         ];
 
         let currentDeck = [...initialDeck];
 
+        // 頁面載入後自動更新張數
+        window.onload = function() {
+            document.getElementById('deckCount').innerText = currentDeck.length;
+        };
+
         function drawEvent() {
             if (currentDeck.length === 0) {
                 if(confirm("事件牌堆已抽完，要重新洗牌嗎？")) {
                     currentDeck = [...initialDeck];
+                    document.getElementById('deckCount').innerText = currentDeck.length;
+                    return;
                 } else { return; }
             }
 
