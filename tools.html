@@ -30,7 +30,6 @@
 
         h1 { font-size: 1.1rem; opacity: 0.8; margin-bottom: 20px; color: var(--primary); letter-spacing: 1px; }
 
-        /* 骰子控制區 */
         .dice-section {
             width: 100%;
             max-width: 400px;
@@ -79,8 +78,6 @@
             cursor: pointer;
         }
 
-        .roll-btn:active { background: var(--primary); color: white; }
-
         #diceDisplay {
             margin-top: 20px;
             min-height: 80px;
@@ -93,7 +90,6 @@
         .individual-dice { font-size: 1rem; color: #8b949e; margin-bottom: 5px; }
         .dice-sum { font-size: 3rem; font-weight: bold; color: white; }
 
-        /* 事件卡區塊 */
         .event-section {
             width: 100%;
             max-width: 400px;
@@ -139,18 +135,15 @@
             font-weight: bold;
             width: 100%;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .history { margin-top: 20px; font-size: 0.85rem; color: #484f58; }
-        #deckCount { font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
     <h1>CAREER PILOT 道具箱</h1>
 
-    <!-- 骰子區 -->
     <div class="dice-section">
         <div style="font-size: 0.8rem; color: #8b949e; margin-bottom: 10px;">設定擲骰數量</div>
         <div class="qty-control">
@@ -168,19 +161,18 @@
         </div>
     </div>
 
-    <!-- 事件卡區 -->
     <div class="event-section">
         <div class="event-card" id="eventCard">
             <div id="eventTag"></div>
             <div class="event-title" id="eventTitle">準備就緒</div>
             <div class="event-desc" id="eventDesc">請踩中【？事件格】的玩家點擊抽取</div>
         </div>
-        <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (剩餘: <span id="deckCount">--</span>)</button>
+        <!-- 修正點：直接在 HTML 內填入 15 -->
+        <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (剩餘: <span id="deckCount">15</span>)</button>
         <div class="history" id="history">尚未抽取</div>
     </div>
 
     <script>
-        // 骰子邏輯
         let currentQty = 1;
         function changeQty(v) {
             currentQty = Math.max(1, Math.min(4, currentQty + v));
@@ -202,7 +194,6 @@
             if (navigator.vibrate) navigator.vibrate(50);
         }
 
-        // --- 15張事件牌庫 ---
         const initialDeck = [
             { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
             { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
@@ -223,16 +214,19 @@
 
         let currentDeck = [...initialDeck];
 
-        // 頁面載入後自動更新張數
-        window.onload = function() {
+        // 修正點：定義更新函式
+        function updateUI() {
             document.getElementById('deckCount').innerText = currentDeck.length;
-        };
+        }
+
+        // 修正點：主動呼叫一次
+        updateUI();
 
         function drawEvent() {
             if (currentDeck.length === 0) {
                 if(confirm("事件牌堆已抽完，要重新洗牌嗎？")) {
                     currentDeck = [...initialDeck];
-                    document.getElementById('deckCount').innerText = currentDeck.length;
+                    updateUI();
                     return;
                 } else { return; }
             }
@@ -242,7 +236,6 @@
             const descEl = document.getElementById('eventDesc');
             const tagEl = document.getElementById('eventTag');
             const historyEl = document.getElementById('history');
-            const countEl = document.getElementById('deckCount');
 
             const index = Math.floor(Math.random() * currentDeck.length);
             const card = currentDeck.splice(index, 1)[0];
@@ -254,7 +247,7 @@
             cardEl.style.borderColor = card.type === 'buff' ? 'var(--buff)' : 'var(--debuff)';
             
             historyEl.innerText = "上次抽取： " + card.t;
-            countEl.innerText = currentDeck.length;
+            updateUI();
 
             cardEl.style.transform = "scale(0.95)";
             setTimeout(() => { cardEl.style.transform = "scale(1)"; }, 100);
