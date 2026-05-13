@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>職涯領航員 2.0 道具</title>
+    <title>職涯領航員 2.0 | 數位教具箱</title>
     <style>
         :root {
             --bg: #0d1117;
             --card: #161b22;
             --border: #30363d;
             --primary: #58a6ff;
-            --personal: #238636;
-            --global: #da3633;
+            --buff: #238636;
+            --debuff: #da3633;
             --text: #c9d1d9;
         }
 
@@ -105,7 +105,7 @@
             border: 2px solid var(--border);
             border-radius: 15px;
             padding: 30px 20px;
-            min-height: 180px;
+            min-height: 200px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -114,20 +114,20 @@
         }
 
         .event-type-tag {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            padding: 3px 10px;
-            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 12px;
             display: inline-block;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             align-self: center;
         }
 
-        .tag-personal { background: var(--personal); color: white; }
-        .tag-global { background: var(--global); color: white; }
+        .tag-buff { background: var(--buff); color: white; }
+        .tag-debuff { background: var(--debuff); color: white; }
 
-        .event-title { font-size: 1.4rem; font-weight: bold; margin-bottom: 15px; }
-        .event-desc { font-size: 0.95rem; line-height: 1.6; color: #8b949e; }
+        .event-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 15px; }
+        .event-desc { font-size: 1rem; line-height: 1.6; color: #c9d1d9; }
 
         .draw-btn {
             background: var(--primary);
@@ -142,12 +142,13 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
-        .history { margin-top: 20px; font-size: 0.8rem; color: #484f58; }
+        .history { margin-top: 20px; font-size: 0.85rem; color: #484f58; }
+        #deckCount { font-weight: bold; color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <h1>CAREER PILOT 道具</h1>
+    <h1>CAREER PILOT 道具箱</h1>
 
     <!-- 骰子區 -->
     <div class="dice-section">
@@ -158,8 +159,8 @@
             <button class="qty-btn" onclick="changeQty(1)">+</button>
         </div>
         <div class="dice-btns">
-            <button class="roll-btn" onclick="rollDice(3)">D3 (基礎/半對)</button>
-            <button class="roll-btn" onclick="rollDice(6)">D6 (進階/組合)</button>
+            <button class="roll-btn" onclick="rollDice(3)">D3 (基礎)</button>
+            <button class="roll-btn" onclick="rollDice(6)">D6 (進階)</button>
         </div>
         <div id="diceDisplay">
             <div class="individual-dice" id="diceDetail">等待擲骰...</div>
@@ -172,7 +173,7 @@
         <div class="event-card" id="eventCard">
             <div id="eventTag"></div>
             <div class="event-title" id="eventTitle">準備就緒</div>
-            <div class="event-desc" id="eventDesc">點擊下方按鈕抽取【？事件卡】</div>
+            <div class="event-desc" id="eventDesc">請踩中【？事件格】的玩家點擊抽取</div>
         </div>
         <button class="draw-btn" onclick="drawEvent()">抽取事件卡 (剩餘: <span id="deckCount">15</span>)</button>
         <div class="history" id="history">尚未抽取</div>
@@ -189,56 +190,52 @@
         function rollDice(sides) {
             const detailEl = document.getElementById('diceDetail');
             const sumEl = document.getElementById('diceSum');
-            
             let results = [];
             let sum = 0;
-            
             for(let i=0; i<currentQty; i++) {
                 let res = Math.floor(Math.random() * sides) + 1;
                 results.push(res);
                 sum += res;
             }
-
             detailEl.innerText = results.join(' + ');
             sumEl.innerText = sum;
-
             if (navigator.vibrate) navigator.vibrate(50);
         }
 
-        // 更新後的 15 張牌庫
+        // --- 15張事件牌庫更新 ---
         const initialDeck = [
-            // --- 🟢 個人機遇 (10張) ---
-            { t: "資源補給", d: "立刻獲得 2 枚 AP 幣。", type: "personal" },
-            { t: "資源補給", d: "立刻獲得 2 枚 AP 幣。", type: "personal" },
-            { t: "資源補給", d: "立刻獲得 2 枚 AP 幣。", type: "personal" },
+            // 🟢 個人機遇與增益 (10張)
+            { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
+            { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
+            { t: "資源補給", d: "將此卡保留。在您的「下一個回合」補牌時，手牌上限暫時提升至 9 張。", type: "buff" },
             
-            { t: "跨部門合作", d: "邀請一位對手結盟，下回合可用 AP 減 2。結盟成功後，雙方直接前進 3 步，且各獲 +2 積分。", type: "personal" },
-            { t: "跨部門合作", d: "邀請一位對手結盟，下回合可用 AP 減 2。結盟成功後，雙方直接前進 3 步，且各獲 +2 積分。", type: "personal" },
-            { t: "跨部門合作", d: "邀請一位對手結盟，下回合可用 AP 減 2。結盟成功後，雙方直接前進 3 步，且各獲 +2 積分。", type: "personal" },
+            { t: "爆品誕生", d: "直接獲得 +2 聲望。你可選擇將成果分給一位對手結盟，若這麼做，雙方聲望皆 +2。", type: "buff" },
+            { t: "爆品誕生", d: "直接獲得 +2 聲望。你可選擇將成果分給一位對手結盟，若這麼做，雙方聲望皆 +2。", type: "buff" },
+            { t: "爆品誕生", d: "直接獲得 +2 聲望。你可選擇將成果分給一位對手結盟，若這麼做，雙方聲望皆 +2。", type: "buff" },
             
-            { t: "爆品誕生", d: "直接獲得 +4 分。可選將此 4 分與一位對手平分 (各+2)，若平分，則雙方主管聲望皆 +1。", type: "personal" },
-            { t: "爆品誕生", d: "直接獲得 +4 分。可選將此 4 分與一位對手平分 (各+2)，若平分，則雙方主管聲望皆 +1。", type: "personal" },
-            { t: "爆品誕生", d: "直接獲得 +4 分。可選將此 4 分與一位對手平分 (各+2)，若平分，則雙方主管聲望皆 +1。", type: "personal" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，若對方同意，雙方的經理人棋子直接前進 3 步，且雙方聲望各 +1。", type: "buff" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，若對方同意，雙方的經理人棋子直接前進 3 步，且雙方聲望各 +1。", type: "buff" },
+            { t: "跨部門合作", d: "邀請一位對手結盟，若對方同意，雙方的經理人棋子直接前進 3 步，且雙方聲望各 +1。", type: "buff" },
             
-            { t: "獵頭情報", d: "獲得一次「無消耗 (免付 2 AP)」且「無條件成功」的獵人頭機會 (仍受四色各一限制)。", type: "personal" },
+            { t: "獵頭情報", d: "獲得一次「必勝」的獵頭機會（免擲骰奪走）；或必勝的防禦機會（被獵時免擲骰防禦）。", type: "buff" },
 
-            // --- 🔴 全局震撼彈 (5張) ---
-            { t: "E01 技術革命", d: "【全場】擁有 D3 或 D4 員工的玩家，下回合出牌時必須額外多支付 1 AP。", type: "global" },
-            { t: "E01 技術革命", d: "【全場】擁有 D3 或 D4 員工的玩家，下回合出牌時必須額外多支付 1 AP。", type: "global" },
-            { t: "E02 組織重整", d: "【全場】全體動盪！所有玩家的主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
-            { t: "E02 組織重整", d: "【全場】全體動盪！所有玩家的主管聲望立刻 -1 (可打責備卡抵銷)。", type: "global" },
-            { t: "E03 福利日", d: "【全場】全員士氣提升！全體玩家主管聲望立刻 +1 (最高不超過 3)。", type: "global" }
+            // 🔴 個人挑戰與危機 (5張)
+            { t: "突發技術瓶頸", d: "專案卡關耗費心神，在您的「下一個回合」補牌時，手牌上限暫時降為 4 張。", type: "debuff" },
+            { t: "突發技術瓶頸", d: "專案卡關耗費心神，在您的「下一個回合」補牌時，手牌上限暫時降為 4 張。", type: "debuff" },
+            
+            { t: "部門預算縮減", d: "團隊士氣受打擊。你的主管聲望立刻 -1（可立刻打出「責備卡」抵銷）。", type: "debuff" },
+            { t: "部門預算縮減", d: "團隊士氣受打擊。你的主管聲望立刻 -1（可立刻打出「責備卡」抵銷）。", type: "debuff" },
+            
+            { t: "核心員工倦怠", d: "您陣營中目前 D 等級最高的一名員工被強迫休假，下一個回合無法被派上場。", type: "debuff" }
         ];
 
         let currentDeck = [...initialDeck];
 
         function drawEvent() {
             if (currentDeck.length === 0) {
-                if(confirm("事件牌組已抽完，要重新洗牌嗎？")) {
+                if(confirm("事件牌堆已抽完，要重新洗牌嗎？")) {
                     currentDeck = [...initialDeck];
-                } else {
-                    return;
-                }
+                } else { return; }
             }
 
             const cardEl = document.getElementById('eventCard');
@@ -253,11 +250,11 @@
             
             titleEl.innerText = card.t;
             descEl.innerText = card.d;
-            tagEl.innerText = card.type === 'personal' ? '🟢 個人機遇' : '🔴 全局震撼彈';
-            tagEl.className = 'event-type-tag ' + (card.type === 'personal' ? 'tag-personal' : 'tag-global');
-            cardEl.style.borderColor = card.type === 'personal' ? 'var(--personal)' : 'var(--global)';
+            tagEl.innerText = card.type === 'buff' ? '🟢 個人機遇與增益' : '🔴 個人挑戰與危機';
+            tagEl.className = 'event-type-tag ' + (card.type === 'buff' ? 'tag-buff' : 'tag-debuff');
+            cardEl.style.borderColor = card.type === 'buff' ? 'var(--buff)' : 'var(--debuff)';
             
-            historyEl.innerText = "上一張： " + card.t;
+            historyEl.innerText = "上次抽取： " + card.t;
             countEl.innerText = currentDeck.length;
 
             cardEl.style.transform = "scale(0.95)";
