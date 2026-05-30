@@ -2,106 +2,49 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Career Pilot | Manager Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>情境領導 3.0 助手</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body>
 
-<header id="appHeader" style="display:none;">
-    <div id="managerTitle">系統連線中</div>
-    <div class="status-bar"><span class="dot"></span> 專案進度：正常運行</div>
-</header>
+    <div class="app-container">
+        <!-- 底部切換導覽 -->
+        <nav class="bottom-nav">
+            <button onclick="showPage('task')">📋 任務掃描</button>
+            <button onclick="showPage('admin')">💼 行政挑戰</button>
+            <button onclick="showPage('tools')">🎲 工具箱</button>
+        </nav>
 
-<!-- 全局效應橫幅 -->
-<div id="globalStatusBanner" class="global-banner" style="display:none;">
-    <span id="globalStatusText">全局效應提醒</span>
-    <button class="banner-close-btn" onclick="closeBanner()">✕</button>
-</div>
-
-<main id="employeeList"></main>
-
-<!-- 步驟 1：暱稱註冊 -->
-<div id="setupScreen" class="overlay flex-center">
-    <div class="setup-card">
-        <h1 style="color:var(--primary); margin-bottom:10px;">管理系統啟動</h1>
-        <p>請輸入您的暱稱</p>
-        <input type="text" id="playerName" placeholder="您的暱稱" class="input-field">
-        <button onclick="showFirstFollowerScan()" class="primary-btn" style="margin-top:20px;">下一步：掃描首位部屬</button>
-    </div>
-</div>
-
-<!-- 通用掃描器 (卡片驗證) -->
-<div id="genericScanner" class="overlay flex-center" style="display:none;">
-    <div class="scanner-container">
-        <div class="scanner-header">
-            <h3 id="scanTitle">卡片驗證</h3>
-            <p id="scanDesc">請將卡片放入框內</p>
-        </div>
-        <div class="viewfinder" style="width:200px; height:280px; margin: 20px auto;">
-            <div id="scanLabel" class="label">SCAN CARD</div>
-            <div class="scan-line"></div>
-            <input type="text" id="generic-code" placeholder="範例代碼" class="mini-input">
-        </div>
-        <div class="scanner-footer">
-            <button id="scanConfirmBtn" class="primary-btn">確認並驗證</button>
-            <button id="scanCancelBtn" class="secondary-btn">取消/略過</button>
-        </div>
-    </div>
-</div>
-
-<!-- 領導行動掃描器 (I + S) -->
-<div id="actionScanner" class="overlay flex-center" style="display:none;">
-    <div class="scanner-container">
-        <div class="scanner-header">
-            <h3>領導行動診斷</h3>
-            <p>請將「指令」與「支持」卡並放</p>
-        </div>
-        <div class="viewfinder-group">
-            <div class="viewfinder" style="width:140px; height:220px;">
-                <div class="label">指令卡 (I)</div>
-                <div class="scan-line"></div>
-                <input type="text" id="manual-I" placeholder="範例：I01" class="mini-input">
+        <!-- 頁面 1: 任務掃描 -->
+        <section id="page-task" class="page">
+            <h2>每回合任務查詢</h2>
+            <div id="task-scanner-zone">
+                <p>請輸入任務卡編號 (1-10)</p>
+                <div class="input-row">
+                    <input type="number" id="task-id" placeholder="任務編號" min="1" max="10">
+                    <button class="primary-btn" onclick="lookupTask()">查看情境與解答</button>
+                </div>
             </div>
-            <div class="viewfinder" style="width:140px; height:220px;">
-                <div class="label">支持卡 (S)</div>
-                <div class="scan-line"></div>
-                <input type="text" id="manual-S" placeholder="範例：S01" class="mini-input">
-            </div>
-        </div>
-        <div class="scanner-footer">
-            <button onclick="processActionScan()" class="primary-btn">執行領導行動</button>
-            <button onclick="closeActionScanner()" class="secondary-btn">取消</button>
-        </div>
-    </div>
-</div>
+            <div id="task-result" class="result-card" style="display:none;"></div>
+        </section>
 
-<!-- 地圖工具箱 -->
-<div id="fabBtn" class="fab" onclick="toggleSidebar()" style="display:none;">🛠️ 地圖工具</div>
-<div id="sidebar" class="sidebar">
-    <div class="sidebar-header"><h3>地圖工具箱</h3><button onclick="toggleSidebar()">✕</button></div>
-    <div class="sidebar-content">
-        <button class="tool-btn" onclick="openGlobalEventInput()" style="background:#d29922; color:white;">🌍 同步全局事件</button>
-        <button class="tool-btn" onclick="triggerBonusCard()" style="background:#0969da; color:white;">💰【獎金卡】效果</button>
-        <button class="tool-btn" onclick="triggerHeadhunt()" style="background:#6e40c9; color:white;">🎯 處理【獵人頭】</button>
-        <button class="tool-btn danger-btn" onclick="triggerCrisis()">🌋 踩中【職場危機】</button>
-        <button class="tool-btn warning-btn" onclick="triggerTraining()">🏫 踩中【總部進修】</button>
-        <button class="tool-btn success-btn" onclick="triggerPromotion()">🆙 踩中【晉升格】</button>
-        <div style="margin:15px 0; border-top:1px solid var(--border);"></div>
-        <button class="tool-btn" onclick="openNewFollowerScan()">➕ 招募新部屬</button>
-        <button class="tool-btn" onclick="triggerEvent()">🎲 踩中【？事件格】</button>
-    </div>
-</div>
+        <!-- 頁面 2: 行政挑戰 -->
+        <section id="page-admin" class="page" style="display:none;">
+            <h2>行政挑戰核對</h2>
+            <p>請輸入行政挑戰卡代碼</p>
+            <input type="text" id="admin-id" placeholder="例如：A05">
+            <button class="primary-btn" onclick="lookupAdmin()">核對解答</button>
+            <div id="admin-result" class="result-card" style="display:none;"></div>
+        </section>
 
-<!-- 通用彈窗 -->
-<div id="modalOverlay" class="overlay flex-center" style="display:none;">
-    <div class="modal">
-        <h2 id="modalTitle"></h2>
-        <div id="modalContent" class="modal-body"></div>
-        <div id="modalActions" class="modal-footer"></div>
+        <!-- 頁面 3: 工具箱 (由之前的 tools.html 整合) -->
+        <section id="page-tools" class="page" style="display:none;">
+            <iframe src="tools.html" frameborder="0" style="width:100%; height:80vh;"></iframe>
+        </section>
     </div>
-</div>
 
-<script src="script.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
