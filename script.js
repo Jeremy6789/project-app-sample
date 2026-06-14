@@ -1,5 +1,5 @@
 // ==========================================
-// 1. 代碼映射與資料庫 (全數字代碼)
+// 1. 代碼映射與資料庫
 // ==========================================
 const TASK_CODES = { "58291": 1, "10473": 2, "72945": 3, "31628": 4, "94052": 5, "48137": 6, "25760": 7, "63914": 8, "82405": 9, "17539": 10 };
 const ADMIN_CODES = { "88214": 1, "30592": 2, "41763": 3, "92401": 4, "15638": 5, "74025": 6, "62917": 7, "20384": 8, "53176": 9, "49820": 10 };
@@ -17,7 +17,7 @@ const TASKS = {
         answers: { 
             D1:["高指令","低支持","指定他去測驗特定的 3 個 API，規定回報格式，要求他只針對技術參數做紀錄。"], 
             D2:["高指令","高支持","解釋換框架的長遠意義，討論研究路徑，避免他因技術太深而放棄。"], 
-            D3:["低指令","高支持","支持他進行各種效能壓力測試，主管扮演技術諮詢者，在他對結果猶豫時給予肯定。"], 
+            D3:["低指令","高支持","支持他進行各種效能壓力測試，主管扮演技術諮詢者，對其結果給予肯定。"], 
             D4:["低指令","低支持","授權他擔任技術負責人，由他決定是否採購相關授權，主管完全相信其專業判斷。"] 
         } 
     },
@@ -29,7 +29,7 @@ const TASKS = {
             D4:["低指令","低支持","授權他設計整體的架構優化方向，主管只需看最終效能提升的報告。"] 
         } 
     },
-    4: { name: "第三方 API 串接", buff: "若達成『完美匹配』，指定前進步數擴大為 1~8 步。", 
+    4: { name: "第三方 API 串接", buff: "若達成『完美匹配』，指定步數擴大為 1~8 步。", 
         answers: { 
             D1:["高指令","低支持","提供 API 文件與調用範例，要求他按照特定的路徑進行連線測試。"], 
             D2:["高指令","高支持","示範如何處理網路延遲與錯誤回報，解釋串接邏輯，並在他失敗時給予高度耐心。"], 
@@ -104,37 +104,55 @@ const ADMINS = {
 // ==========================================
 // 2. 狀態管理與頁面控制
 // ==========================================
-let gameData = { taskCount: 0, currentTask: null, currentTaskId: 0, currentAdmin: null, selectedEmployees: [], scanner: null, scannerType: "" };
+let gameData = { taskCount: 0, currentTask: null, currentTaskId: 0, selectedEmployees: [], scanner: null, scannerType: "" };
 
 function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const target = document.getElementById('page-' + id);
     if(target) target.style.display = 'block';
     
-    // 進入代碼輸入頁時自動清空內容
+    // 清理輸入框內容
     if(id === 'task-select') document.getElementById('task-code-input').value = "";
     if(id === 'admin-select') document.getElementById('admin-code-input').value = "";
+    
     window.scrollTo(0,0);
 }
 
 // ==========================================
-// 3. 掃描與輸入驗證邏輯
+// 3. 掃描與代碼判定 (移除 qrbox 以拿掉輔助框)
 // ==========================================
 function startFlow(type) {
     gameData.scannerType = type;
     const readerId = type === 'task' ? 'task-reader' : 'admin-reader';
     showPage(type + '-select');
+
     if (gameData.scanner) gameData.scanner.clear();
     gameData.scanner = new Html5Qrcode(readerId);
-    gameData.scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-        gameData.scanner.stop().then(() => { handleUniversalInput(text); });
-    }, () => {}).catch(err => console.error("相機錯誤"));
+    
+    // 修正點：移除 qrbox 屬性，這樣就不會出現中間的方框與半透明遮罩
+    const config = { fps: 10 }; 
+
+    gameData.scanner.start(
+        { facingMode: "environment" }, 
+        config, 
+        (decodedText) => {
+            gameData.scanner.stop().then(() => {
+                handleUniversalInput(decodedText);
+            });
+        },
+        () => {} // 忽略失敗報錯
+    ).catch(err => console.error("相機啟動失敗"));
 }
 
 function stopScanner() {
     if (gameData.scanner && gameData.scanner.isScanning) {
-        gameData.scanner.stop().then(() => { gameData.scanner.clear(); showPage('home'); });
-    } else { showPage('home'); }
+        gameData.scanner.stop().then(() => {
+            gameData.scanner.clear();
+            showPage('home');
+        });
+    } else {
+        showPage('home');
+    }
 }
 
 function handleUniversalInput(input) {
@@ -152,13 +170,13 @@ function validateTaskCode() { handleUniversalInput(document.getElementById('task
 function validateAdminCode() { handleUniversalInput(document.getElementById('admin-code-input').value); }
 
 // ==========================================
-// 4. 全局任務判定流程
+// 4. 全局任務流程
 // ==========================================
 function loadTask(id) {
     gameData.currentTaskId = id;
     gameData.currentTask = TASKS[id];
     document.getElementById('task-info-header').innerHTML = `
-        <h2 style="margin:0;">任務 ${id}：${gameData.currentTask.name}</h2>
+        <h2 style="margin:0; font-size:1.3rem;">任務 ${id}：${gameData.currentTask.name}</h2>
         <div class="buff-box">💡 本局效果：${gameData.currentTask.buff}</div>`;
 
     const list = document.getElementById('employee-selection-list');
@@ -172,7 +190,7 @@ function loadTask(id) {
     });
 
     const step1Extra = document.getElementById('step1-extra-action');
-    if (id === 7) step1Extra.innerHTML = `<button class="confirm-btn" style="background:var(--primary);" onclick="nextRound(false, true)">放棄領導 (任務 7 放棄紅利：聲望 +1)</button>`;
+    if (id === 7) step1Extra.innerHTML = `<button class="ghost-btn" style="border-color:var(--primary); color:var(--primary); border-style:solid; border-width:2px;" onclick="nextRound(false, true)">放棄領導 (任務 7 放棄紅利：聲望 +1)</button>`;
     else step1Extra.innerHTML = "";
 
     showPage('task-step1');
@@ -181,7 +199,7 @@ function loadTask(id) {
 function goToTaskStep2() {
     gameData.selectedEmployees = [];
     [1,2,3,4].forEach(d => { if(document.getElementById(`select-d${d}`).classList.contains('active')) gameData.selectedEmployees.push(d); });
-    if(gameData.selectedEmployees.length === 0) return alert("請至少選擇一位員工");
+    if(gameData.selectedEmployees.length === 0) return alert("請至少選擇一位上場員工");
 
     const grid = document.getElementById('diagnosis-grid');
     grid.innerHTML = `<p class="zone-hint" style="color:var(--primary); font-weight:bold;">💡 點選您對該員工「實際打出」且「正確」的卡牌：</p>`;
@@ -198,7 +216,7 @@ function goToTaskStep2() {
     });
 
     const step2Extra = document.getElementById('step2-extra-action');
-    step2Extra.innerHTML = (gameData.currentTaskId === 7) ? `<button class="confirm-btn" style="color:#fff; background:var(--primary);" onclick="nextRound(false, true)">放棄領導 (聲望 +1)</button>` : "";
+    step2Extra.innerHTML = (gameData.currentTaskId === 7) ? `<button class="ghost-btn" style="color:var(--primary); border-style:solid; border-width:2px;" onclick="nextRound(false, true)">放棄領導 (聲望 +1)</button>` : "";
     showPage('task-step2');
 }
 
@@ -219,14 +237,14 @@ function resolveTask() {
             let dice = (tid===3)?"指定骰+1d6":(tid===4)?"指定骰(1-8步)":(tid===5)?"d6 骰子":(tid===9)?"指定骰(步數x2)":"指定骰(1-6步)";
             log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
                         <strong>D${dLevel}：</strong><span style='color:var(--success); font-weight:bold;'>完美匹配</span><br>
-                        ➔ 獲得 ${dice}，聲望 +${rep}<br>
+                        ➔ 領取 ${dice}，聲望 +${rep}<br>
                         <p style='font-size:0.85rem; color:#444; margin-top:5px;'><b>管理行為舉例：</b>${exampleText}</p>
                     </div>`;
         } else if (activeCount === 1) {
             let dice = (tid===3)?"d3+1d6骰":(tid===8)?"指定骰(1-6步)":"d3 骰子一顆";
             log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
                         <strong>D${dLevel}：</strong><span style='color:var(--warning); font-weight:bold;'>半對保底</span><br>
-                        ➔ 獲得 ${dice}<br>
+                        ➔ 領取 ${dice}<br>
                         <p style='font-size:0.85rem; color:#444; margin-top:5px;'><b>正確管理行為舉例：</b>${exampleText}</p>
                     </div>`;
         } else {
@@ -239,22 +257,20 @@ function resolveTask() {
         }
     });
 
-    if (tid === 1 && gameData.selectedEmployees.length > 1) log += `<p style='color:var(--primary); font-weight:bold;'>✨ 任務加成：多名員工管理，聲望額外 +1</p>`;
+    if (tid === 1 && gameData.selectedEmployees.length > 1) log += `<p style='color:var(--primary); font-weight:bold;'>✨ 任務加成：多員工管理，聲望額外 +1</p>`;
     if (tid === 10 && misalignedAny) log += `<p style='color:var(--danger); font-weight:bold;'>⚠️ 嚴厲問責：本局失誤，聲望改為 -3 點！</p>`;
 
     openModal("結算結果報告", log, () => nextRound());
 }
 
 // ==========================================
-// 5. 行政挑戰判定 (紅綠框單選改選)
+// 5. 行政挑戰
 // ==========================================
 function loadAdmin(id) {
     gameData.currentAdmin = ADMINS[id];
-    document.getElementById('admin-content').innerHTML = `<h2>行政挑戰編號 ${id}</h2><div class="buff-box">${gameData.currentAdmin.name}</div>`;
+    document.getElementById('admin-content').innerHTML = `<h2>行政挑戰 ${id}</h2><div class="buff-box" style="background:#f0f7ff; border-left-color:var(--primary); color:#000;"><strong>任務：</strong>${gameData.currentAdmin.name}</div>`;
     document.getElementById('admin-result').style.display = 'none';
-    document.querySelectorAll('.d-btn').forEach(b => {
-        b.classList.remove('btn-correct', 'btn-wrong');
-    });
+    document.querySelectorAll('.d-btn').forEach(b => b.className = 'd-btn');
     showPage('admin-detail');
 }
 
@@ -272,28 +288,23 @@ function revealAdmin(btn, guess) {
         <div style="font-weight:bold; font-size:1.2rem; color:${guess === correctD ? 'var(--success)' : 'var(--danger)'}">
             ${guess === correctD ? '🎯 診斷正確！聲望 +2' : '❌ 診斷有誤'}
         </div>
-        <p>正確解答應為：<strong>${correctD}</strong> (${gameData.currentAdmin.ans})</p>
+        <p>解答：這名員工屬於 <strong>${correctD}</strong> (${gameData.currentAdmin.ans})</p>
         <div style="background:#fff; padding:15px; border-radius:10px; border:1px solid #ddd; font-size:0.95rem;">
             <b>管理行為舉例：</b>${gameData.currentAdmin.ex}
-        </div>
-    `;
+        </div>`;
 }
 
 // ==========================================
-// 6. 通用控制與計數
+// 6. 通用計數與提醒
 // ==========================================
 function nextRound(skip = false, task7 = false) {
     gameData.taskCount++;
     document.getElementById('round-number').innerText = gameData.taskCount;
-    
-    if (task7) {
-        openModal("✨ 任務效果結算", "您選擇不派遣員工。年度進度已推進，請領取聲望直接 +1 點。");
-    } else if (skip) {
-        openModal("🧘 管理沉澱期", "本回合無人可派。獲得團隊自動運轉紅利：<br><br><b style='color:var(--primary); font-size:1.2rem;'>● 主管聲望 +1<br>● 獲得 1 張管理祕訣卡</b>");
-    }
+    if (task7) openModal("✨ 任務特效結算", "您選擇不派遣員工。年度進度已推進，聲望直接 +1 點。");
+    else if (skip) openModal("🧘 管理沉澱期", "本回合無人可派。獲得團隊自動運轉紅利：<br><br><b style='color:var(--primary); font-size:1.1rem;'>● 主管聲望 +1<br>● 獲得 1 張免費管理祕訣卡</b>");
 
     if (gameData.taskCount > 0 && gameData.taskCount % 3 === 0) {
-        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間到！</span><br>請全場玩家捨棄一張手中的員工卡，並從員工牌庫中拿取一張目前未持有的顏色卡牌。"), 500);
+        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間到！</span><br>請全場經理人更換一名員工卡。"), 500);
     }
     showPage('home');
 }
@@ -306,10 +317,4 @@ function openModal(t, b, cb) {
 }
 function closeModal() { document.getElementById('app-modal').style.display = 'none'; }
 
-// 初始化
-window.onload = () => {
-    const tg = document.getElementById('task-grid');
-    for(let i=1; i<=10; i++) tg.innerHTML += `<button class="num-btn" onclick="loadTask(${i})">${i}</button>`;
-    const ag = document.getElementById('admin-grid');
-    for(let i=1; i<=10; i++) ag.innerHTML += `<button class="num-btn" onclick="loadAdmin(${i})">${i}</button>`;
-};
+window.onload = init;
