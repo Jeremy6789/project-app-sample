@@ -304,7 +304,7 @@ function nextRound(skip = false, task7 = false) {
     else if (skip) openModal("🧘 管理沉澱期", "本回合無人可派。獲得團隊自動運轉紅利：<br><br><b style='color:var(--primary); font-size:1.1rem;'>● 主管聲望 +1<br>● 獲得 1 張管理祕訣卡</b>");
 
     if (gameData.taskCount > 0 && gameData.taskCount % 3 === 0) {
-        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間到！</span><br>請全場玩家捨棄一張員工卡，並從員工牌庫拿取一張目前未擁有的卡牌。"), 500);
+        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間到！</span><br>請全場玩家捨棄一張員工卡，並從員工牌庫拿取一張目前未擁有的顏色卡牌。"), 500);
     }
     showPage('home');
 }
