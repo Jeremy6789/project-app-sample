@@ -2,49 +2,109 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>情境領導 3.0 助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>情境領導 3.0 | 數位助理</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
-    <div class="app-container">
-        <!-- 底部切換導覽 -->
-        <nav class="bottom-nav">
-            <button onclick="showPage('task')">📋 任務掃描</button>
-            <button onclick="showPage('admin')">💼 行政挑戰</button>
-            <button onclick="showPage('tools')">🎲 工具箱</button>
-        </nav>
+    <header>
+        <div class="round-indicator">
+            <span class="round-label">任務累計</span>
+            <span id="round-number" class="round-value">0</span>
+        </div>
+        <div class="app-title">管理決策系統</div>
+    </header>
 
-        <!-- 頁面 1: 任務掃描 -->
-        <section id="page-task" class="page">
-            <h2>每回合任務查詢</h2>
-            <div id="task-scanner-zone">
-                <p>請輸入任務卡編號 (1-10)</p>
-                <div class="input-row">
-                    <input type="number" id="task-id" placeholder="任務編號" min="1" max="10">
-                    <button class="primary-btn" onclick="lookupTask()">查看情境與解答</button>
+    <!-- 主畫面 -->
+    <section id="page-home" class="page">
+        <div class="welcome-text">請選擇本回合的操作項目：</div>
+        <div class="menu-stack">
+            <button class="menu-card task-card" onclick="startFlow('task')">
+                <div class="menu-icon">📋</div>
+                <div class="menu-info">
+                    <span class="menu-title">全局任務卡</span>
+                    <span class="menu-desc">掃描或輸入代碼開始行動</span>
                 </div>
+            </button>
+            <button class="menu-card admin-card" onclick="startFlow('admin')">
+                <div class="menu-icon">💼</div>
+                <div class="menu-info">
+                    <span class="menu-title">行政挑戰格</span>
+                    <span class="menu-desc">掃描或核對行政任務解答</span>
+                </div>
+            </button>
+        </div>
+    </section>
+
+    <!-- 全局任務：掃描與輸入頁面 -->
+    <section id="page-task-select" class="page" style="display:none;">
+        <div class="navigation"><button class="back-btn" onclick="stopScanner()">← 返回</button></div>
+        <div id="task-reader" class="qr-reader"></div>
+        <div class="manual-code-zone">
+            <label class="input-label">請輸入任務卡 5 碼數字</label>
+            <div class="input-group">
+                <input type="tel" id="task-code-input" placeholder="例如：58291" maxlength="5" autocomplete="off">
+                <button class="action-btn" onclick="validateTaskCode()">進入</button>
             </div>
-            <div id="task-result" class="result-card" style="display:none;"></div>
-        </section>
+            <!-- 休息按鈕僅在此處保留 -->
+            <button class="ghost-btn" style="margin-top:25px;" onclick="nextRound(true)">本回合無人上場 (管理沉澱)</button>
+        </div>
+    </section>
 
-        <!-- 頁面 2: 行政挑戰 -->
-        <section id="page-admin" class="page" style="display:none;">
-            <h2>行政挑戰核對</h2>
-            <p>請輸入行政挑戰卡代碼</p>
-            <input type="text" id="admin-id" placeholder="例如：A05">
-            <button class="primary-btn" onclick="lookupAdmin()">核對解答</button>
-            <div id="admin-result" class="result-card" style="display:none;"></div>
-        </section>
+    <!-- 行政挑戰：掃描與輸入頁面 -->
+    <section id="page-admin-select" class="page" style="display:none;">
+        <div class="navigation"><button class="back-btn" onclick="stopScanner()">← 返回</button></div>
+        <div id="admin-reader" class="qr-reader"></div>
+        <div class="manual-code-zone">
+            <label class="input-label">請輸入行政卡 5 碼數字</label>
+            <div class="input-group">
+                <input type="tel" id="admin-code-input" placeholder="例如：88214" maxlength="5" autocomplete="off">
+                <button class="action-btn" onclick="validateAdminCode()">核對</button>
+            </div>
+        </div>
+    </section>
 
-        <!-- 頁面 3: 工具箱 (由之前的 tools.html 整合) -->
-        <section id="page-tools" class="page" style="display:none;">
-            <iframe src="tools.html" frameborder="0" style="width:100%; height:80vh;"></iframe>
-        </section>
+    <!-- 任務流程 Step 1 & 2 -->
+    <section id="page-task-step1" class="page" style="display:none;">
+        <div id="task-info-header"></div>
+        <h3 class="step-title">步驟 1：選擇派遣員工</h3>
+        <div id="employee-selection-list" class="selection-stack"></div>
+        <button class="confirm-btn" onclick="goToTaskStep2()">下一步：判定出牌組合</button>
+        <div id="step1-extra-action"></div>
+    </section>
+
+    <section id="page-task-step2" class="page" style="display:none;">
+        <h3 class="step-title">步驟 2：出牌判定</h3>
+        <div id="diagnosis-grid"></div>
+        <button class="confirm-btn" onclick="resolveTask()">結算產出結果</button>
+        <div id="step2-extra-action"></div>
+    </section>
+
+    <!-- 行政挑戰詳情：答題頁 -->
+    <section id="page-admin-detail" class="page" style="display:none;">
+        <div id="admin-content"></div>
+        <div class="diag-label">診斷員工發展階段：</div>
+        <div id="admin-d-grid" class="d-level-grid">
+            <button class="d-btn" onclick="revealAdmin(this, 'D1')">D1</button>
+            <button class="d-btn" onclick="revealAdmin(this, 'D2')">D2</button>
+            <button class="d-btn" onclick="revealAdmin(this, 'D3')">D3</button>
+            <button class="d-btn" onclick="revealAdmin(this, 'D4')">D4</button>
+        </div>
+        <div id="admin-result" class="admin-reveal" style="display:none;"></div>
+        <button class="confirm-btn" onclick="showPage('home')" style="margin-top:30px;">完成並返回主畫面</button>
+    </section>
+
+    <!-- 彈窗 -->
+    <div id="app-modal" class="modal-overlay" style="display:none;">
+        <div class="modal-window">
+            <h2 id="modal-title"></h2>
+            <div id="modal-body" class="modal-body"></div>
+            <button class="modal-btn" id="modal-close-btn" onclick="closeModal()">確認</button>
+        </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
