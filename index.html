@@ -3,100 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>情境領導 3.0 | 數位助理</title>
+    <title>情境領導桌遊輔助APP</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/html5-qrcode"></script>
 </head>
 <body>
 
-    <header>
-        <div class="round-indicator">
-            <span class="round-label">任務累計</span>
-            <span id="round-number" class="round-value">0</span>
-        </div>
-        <div class="app-title">管理決策系統</div>
-    </header>
-
-    <!-- 主畫面 -->
-    <section id="page-home" class="page">
-        <div class="welcome-text">請選擇本回合的操作項目：</div>
-        <div class="menu-stack">
-            <button class="menu-card task-card" onclick="startFlow('task')">
-                <div class="menu-icon">📋</div>
-                <div class="menu-info">
-                    <span class="menu-title">全局任務卡</span>
-                    <span class="menu-desc">掃描或輸入代碼開始行動</span>
-                </div>
-            </button>
-            <button class="menu-card admin-card" onclick="startFlow('admin')">
-                <div class="menu-icon">💼</div>
-                <div class="menu-info">
-                    <span class="menu-title">行政挑戰格</span>
-                    <span class="menu-desc">掃描或核對行政任務解答</span>
-                </div>
-            </button>
-        </div>
-    </section>
-
-    <!-- 全局任務：掃描與輸入頁面 -->
-    <section id="page-task-select" class="page" style="display:none;">
-        <div class="navigation"><button class="back-btn" onclick="stopScanner()">← 返回</button></div>
-        <div id="task-reader" class="qr-reader"></div>
-        <div class="manual-code-zone">
-            <label class="input-label">請輸入任務卡 5 碼數字</label>
-            <div class="input-group">
-                <input type="tel" id="task-code-input" placeholder="例如：58291" maxlength="5" autocomplete="off">
-                <button class="action-btn" onclick="validateTaskCode()">進入</button>
+    <!-- 手機殼容器：在電腦看會置中，手機看會滿版 -->
+    <div class="mobile-wrapper">
+        <header>
+            <div class="round-indicator">
+                <span class="round-label">任務累計</span>
+                <span id="round-number" class="round-value">0</span>
             </div>
-            <!-- 休息按鈕僅在此處保留 -->
-            <button class="ghost-btn" style="margin-top:25px;" onclick="nextRound(true)">本回合無人上場 (管理沉澱)</button>
-        </div>
-    </section>
+            <div class="app-title">情境領導輔助APP</div>
+        </header>
 
-    <!-- 行政挑戰：掃描與輸入頁面 -->
-    <section id="page-admin-select" class="page" style="display:none;">
-        <div class="navigation"><button class="back-btn" onclick="stopScanner()">← 返回</button></div>
-        <div id="admin-reader" class="qr-reader"></div>
-        <div class="manual-code-zone">
-            <label class="input-label">請輸入行政卡 5 碼數字</label>
-            <div class="input-group">
-                <input type="tel" id="admin-code-input" placeholder="例如：88214" maxlength="5" autocomplete="off">
-                <button class="action-btn" onclick="validateAdminCode()">核對</button>
-            </div>
-        </div>
-    </section>
+        <!-- 主內容區 -->
+        <main class="content-scroll">
+            
+            <!-- 主畫面 (Home) -->
+            <section id="page-home" class="page">
+                <div class="welcome-text">請選擇本回合的操作項目：</div>
+                <div class="menu-stack">
+                    <button class="menu-card task-card" onclick="startFlow('task')">
+                        <div class="menu-icon">📋</div>
+                        <div class="menu-info">
+                            <span class="menu-title">全局任務卡</span>
+                            <span class="menu-desc">管理團隊並判定領導產出</span>
+                        </div>
+                    </button>
+                    <button class="menu-card admin-card" onclick="startFlow('admin')">
+                        <div class="menu-icon">💼</div>
+                        <div class="menu-info">
+                            <span class="menu-title">行政挑戰格</span>
+                            <span class="menu-desc">核對行政事務之診斷解答</span>
+                        </div>
+                    </button>
+                </div>
+            </section>
 
-    <!-- 任務流程 Step 1 & 2 -->
-    <section id="page-task-step1" class="page" style="display:none;">
-        <div id="task-info-header"></div>
-        <h3 class="step-title">步驟 1：選擇派遣員工</h3>
-        <div id="employee-selection-list" class="selection-stack"></div>
-        <button class="confirm-btn" onclick="goToTaskStep2()">下一步：判定出牌組合</button>
-        <div id="step1-extra-action"></div>
-    </section>
+            <!-- 任務：輸入與掃描 -->
+            <section id="page-task-select" class="page" style="display:none;">
+                <div class="navigation"><button class="back-btn" onclick="stopScanner()">← 返回</button></div>
+                <div id="task-reader" class="qr-reader"></div>
+                <div class="manual-code-zone">
+                    <label class="input-label">請輸入任務卡 5 碼數字</label>
+                    <div class="input-group">
+                        <input type="tel" id="task-code-input" placeholder="例如：58291" maxlength="5" autocomplete="off">
+                        <button class="action-btn" onclick="validateTaskCode()">進入</button>
+                    </div>
+                    <button class="ghost-btn" style="margin-top:25px;" onclick="nextRound(true)">本回合無人上場 (管理沉澱)</button>
+                </div>
+            </section>
 
-    <section id="page-task-step2" class="page" style="display:none;">
-        <h3 class="step-title">步驟 2：出牌判定</h3>
-        <div id="diagnosis-grid"></div>
-        <button class="confirm-btn" onclick="resolveTask()">結算產出結果</button>
-        <div id="step2-extra-action"></div>
-    </section>
+            <!-- 行政挑戰：掃描與輸入 -->
+            <section id="page-admin-select" class="page" style="display:none;">
+                <div class="navigation"><button class="back-btn" onclick="stopScanner()">← 返回</button></div>
+                <div id="admin-reader" class="qr-reader"></div>
+                <div class="manual-code-zone">
+                    <label class="input-label">請輸入行政卡 5 碼數字</label>
+                    <div class="input-group">
+                        <input type="tel" id="admin-code-input" placeholder="例如：88214" maxlength="5" autocomplete="off">
+                        <button class="action-btn" onclick="validateAdminCode()">核對</button>
+                    </div>
+                </div>
+            </section>
 
-    <!-- 行政挑戰詳情：答題頁 -->
-    <section id="page-admin-detail" class="page" style="display:none;">
-        <div id="admin-content"></div>
-        <div class="diag-label">診斷員工發展階段：</div>
-        <div id="admin-d-grid" class="d-level-grid">
-            <button class="d-btn" onclick="revealAdmin(this, 'D1')">D1</button>
-            <button class="d-btn" onclick="revealAdmin(this, 'D2')">D2</button>
-            <button class="d-btn" onclick="revealAdmin(this, 'D3')">D3</button>
-            <button class="d-btn" onclick="revealAdmin(this, 'D4')">D4</button>
-        </div>
-        <div id="admin-result" class="admin-reveal" style="display:none;"></div>
-        <button class="confirm-btn" onclick="showPage('home')" style="margin-top:30px;">完成並返回主畫面</button>
-    </section>
+            <!-- 任務 Step 1：選人 -->
+            <section id="page-task-step1" class="page" style="display:none;">
+                <div id="task-info-header"></div>
+                <h3 class="step-title">步驟 1：選擇派遣員工</h3>
+                <div id="employee-selection-list" class="selection-stack"></div>
+                <button class="confirm-btn" onclick="goToTaskStep2()">下一步：判定出牌組合</button>
+                <div id="step1-extra-action"></div>
+            </section>
 
-    <!-- 彈窗 -->
+            <!-- 任務 Step 2：判定 -->
+            <section id="page-task-step2" class="page" style="display:none;">
+                <h3 class="step-title">步驟 2：出牌判定</h3>
+                <div id="diagnosis-grid"></div>
+                <button class="confirm-btn" onclick="resolveTask()">結算產出結果</button>
+                <div id="step2-extra-action"></div>
+            </section>
+
+            <!-- 行政詳情 -->
+            <section id="page-admin-detail" class="page" style="display:none;">
+                <div id="admin-content"></div>
+                <div class="diag-label">診斷員工發展階段：</div>
+                <div id="admin-d-grid" class="d-level-grid">
+                    <button class="d-btn" onclick="revealAdmin(this, 'D1')">D1</button>
+                    <button class="d-btn" onclick="revealAdmin(this, 'D2')">D2</button>
+                    <button class="d-btn" onclick="revealAdmin(this, 'D3')">D3</button>
+                    <button class="d-btn" onclick="revealAdmin(this, 'D4')">D4</button>
+                </div>
+                <div id="admin-result" class="admin-reveal" style="display:none;"></div>
+                <button class="confirm-btn" onclick="showPage('home')" style="margin-top:30px;">完成並返回</button>
+            </section>
+        </main>
+    </div>
+
+    <!-- 彈窗模組 (全螢幕層級) -->
     <div id="app-modal" class="modal-overlay" style="display:none;">
         <div class="modal-window">
             <h2 id="modal-title"></h2>
