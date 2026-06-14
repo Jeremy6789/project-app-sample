@@ -237,14 +237,14 @@ function resolveTask() {
             let dice = (tid===3)?"指定骰+1d6":(tid===4)?"指定骰(1-8步)":(tid===5)?"d6 骰子":(tid===9)?"指定骰(步數x2)":"指定骰(1-6步)";
             log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
                         <strong>D${dLevel}：</strong><span style='color:var(--success); font-weight:bold;'>完美匹配</span><br>
-                        ➔ 領取 ${dice}，聲望 +${rep}<br>
+                        ➔ 獲得 ${dice}，聲望 +${rep}<br>
                         <p style='font-size:0.85rem; color:#444; margin-top:5px;'><b>管理行為舉例：</b>${exampleText}</p>
                     </div>`;
         } else if (activeCount === 1) {
             let dice = (tid===3)?"d3+1d6骰":(tid===8)?"指定骰(1-6步)":"d3 骰子一顆";
             log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
                         <strong>D${dLevel}：</strong><span style='color:var(--warning); font-weight:bold;'>半對保底</span><br>
-                        ➔ 領取 ${dice}<br>
+                        ➔ 獲得 ${dice}<br>
                         <p style='font-size:0.85rem; color:#444; margin-top:5px;'><b>正確管理行為舉例：</b>${exampleText}</p>
                     </div>`;
         } else {
@@ -301,10 +301,10 @@ function nextRound(skip = false, task7 = false) {
     gameData.taskCount++;
     document.getElementById('round-number').innerText = gameData.taskCount;
     if (task7) openModal("✨ 任務特效結算", "您選擇不派遣員工。年度進度已推進，聲望直接 +1 點。");
-    else if (skip) openModal("🧘 管理沉澱期", "本回合無人可派。獲得團隊自動運轉紅利：<br><br><b style='color:var(--primary); font-size:1.1rem;'>● 主管聲望 +1<br>● 獲得 1 張免費管理祕訣卡</b>");
+    else if (skip) openModal("🧘 管理沉澱期", "本回合無人可派。獲得團隊自動運轉紅利：<br><br><b style='color:var(--primary); font-size:1.1rem;'>● 主管聲望 +1<br>● 獲得 1 張管理祕訣卡</b>");
 
     if (gameData.taskCount > 0 && gameData.taskCount % 3 === 0) {
-        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間到！</span><br>請全場經理人更換一名員工卡。"), 500);
+        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間到！</span><br>請全場玩家捨棄一張員工卡，並從員工牌庫拿取一張目前未擁有的卡牌。"), 500);
     }
     showPage('home');
 }
