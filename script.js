@@ -34,52 +34,82 @@ let gameData = { taskCount: 0, currentTask: null, currentTaskId: 0, currentAdmin
 const html5QrCode = new Html5Qrcode("reader-placeholder"); // 初始化後隨即更換實體 ID
 
 // ==========================================
-// 2. 頁面控制與輸入清理
-// ==========================================
-function showPage(id) {
-    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-    document.getElementById('page-' + id).style.display = 'block';
-    if(id === 'task-select') document.getElementById('task-code-input').value = "";
-    if(id === 'admin-select') document.getElementById('admin-code-input').value = "";
-    window.scrollTo(0,0);
-}
-
-// ==========================================
 // 3. 掃描與代碼判定
 // ==========================================
 function startFlow(type) {
-    const readerId = type === 'task' ? 'task-reader' : 'admin-reader';
     gameData.scannerType = type;
+    const readerId = type === 'task' ? 'task-reader' : 'admin-reader';
     showPage(type + '-select');
-    const qrScanner = new Html5Qrcode(readerId);
-    gameData.activeScanner = qrScanner;
-    qrScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => handleUniversalInput(text))
-    .catch(err => console.log("Scanner error"));
+
+    // 確保舊掃描器已清理
+    if (gameData.scanner) {
+        gameData.scanner.clear();
+    }
+
+    gameData.scanner = new Html5Qrcode(readerId);
+    
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+    gameData.scanner.start(
+        { facingMode: "environment" }, 
+        config, 
+        (decodedText) => {
+            // 成功掃描後的動作：先停止相機，再處理資料
+            console.log("掃描成功:", decodedText);
+            gameData.scanner.stop().then(() => {
+                handleUniversalInput(decodedText);
+            }).catch(err => {
+                console.log("停止掃描時出錯", err);
+                handleUniversalInput(decodedText); // 就算停止失敗也強行處理資料
+            });
+        },
+        (errorMessage) => {
+            // 忽略「找不到 QR Code」的每幀報錯，避免彈窗
+            // console.log(errorMessage); 
+        }
+    ).catch(err => {
+        console.error("相機啟動失敗", err);
+    });
 }
 
 function stopScanner() {
-    if(gameData.activeScanner && gameData.activeScanner.isScanning) {
-        gameData.activeScanner.stop().then(() => showPage('home'));
-    } else { showPage('home'); }
+    if (gameData.scanner && gameData.scanner.isScanning) {
+        gameData.scanner.stop().then(() => {
+            gameData.scanner.clear();
+            showPage('home');
+        });
+    } else {
+        showPage('home');
+    }
 }
 
 function handleUniversalInput(input) {
     const code = input.trim();
-    if(gameData.scannerType === 'task') {
+    if (gameData.scannerType === 'task') {
         const id = TASK_CODES[code];
-        if(id) { stopScanner(); loadTask(id); } else { alert("代碼錯誤"); }
+        if (id) { loadTask(id); } 
+        else { alert("任務代碼無效: " + code); showPage('task-select'); }
     } else {
         const id = ADMIN_CODES[code];
-        if(id) { stopScanner(); loadAdmin(id); } else { alert("代碼錯誤"); }
+        if (id) { loadAdmin(id); } 
+        else { alert("行政代碼無效: " + code); showPage('admin-select'); }
     }
 }
 
-function validateTaskCode() { handleUniversalInput(document.getElementById('task-code-input').value); }
-function validateAdminCode() { handleUniversalInput(document.getElementById('admin-code-input').value); }
+function validateTaskCode() { 
+    const val = document.getElementById('task-code-input').value;
+    handleUniversalInput(val); 
+}
+
+function validateAdminCode() { 
+    const val = document.getElementById('admin-code-input').value;
+    handleUniversalInput(val); 
+}
 
 // ==========================================
-// 3. 全局任務判定
+// 4. 全局任務判定流程
 // ==========================================
+
 function loadTask(id) {
     gameData.currentTaskId = id;
     gameData.currentTask = TASKS[id];
@@ -97,7 +127,6 @@ function loadTask(id) {
             </div>`;
     });
 
-    // 僅在任務 7 顯示放棄按鈕，移除了一般休息鈕
     const step1Extra = document.getElementById('step1-extra-action');
     step1Extra.innerHTML = (id === 7) ? `<button class="ghost-btn" style="border-color:var(--primary); color:var(--primary); border-style:solid;" onclick="nextRound(false, true)">放棄領導 (任務 7 特效：聲望 +1)</button>` : "";
 
@@ -115,7 +144,7 @@ function goToTaskStep2() {
         const ans = gameData.currentTask.answers['D'+d];
         grid.innerHTML += `
             <div class="diagnosis-row">
-                <span class="d-label">對 D${d} 員工 (正確風格應為 S${d})：</span>
+                <span class="d-label">對 D${d} 員工 (正確應為 S${d})：</span>
                 <div class="btn-group">
                     <button class="style-btn" onclick="this.classList.toggle('active')">正確的 [${ans[0]}] 卡</button>
                     <button class="style-btn" onclick="this.classList.toggle('active')">正確的 [${ans[1]}] 卡</button>
@@ -150,20 +179,21 @@ function resolveTask() {
         }
     });
 
-    if (tid === 1 && gameData.selectedEmployees.length > 1) log += `<p style="color:var(--primary)">✨ 任務加成：多名員工管理，聲望額外 +1</p>`;
-    if (tid === 10 && misalignedAny) log += `<p style="color:var(--danger); font-weight:bold;">⚠️ 嚴厲問責：本局失誤，聲望改為 -3 點！</p>`;
+    if (tid === 1 && gameData.selectedEmployees.length > 1) log += `<p style="color:var(--primary)">✨ 任務效果：聲望額外 +1</p>`;
+    if (tid === 10 && misalignedAny) log += `<p style="color:var(--danger); font-weight:bold;">⚠️ 嚴厲問責：聲望改為 -3 點！</p>`;
 
     openModal("結算結果報告", log, () => nextRound());
 }
 
 // ==========================================
-// 4. 行政挑戰判定 (紅綠框單選)
+// 5. 行政挑戰判定 (修復紅綠框改選)
 // ==========================================
 function loadAdmin(id) {
     gameData.currentAdmin = ADMINS[id];
-    document.getElementById('admin-content').innerHTML = `<h2>行政挑戰 ${id}</h2><div class="buff-box" style="background:#f0f7ff; border-left-color:var(--primary); color:#000;"><strong>任務：</strong>${gameData.currentAdmin.name}</div>`;
+    document.getElementById('admin-content').innerHTML = `<h2>行政挑戰編號 ${id}</h2><div class="buff-box">${gameData.currentAdmin.name}</div>`;
     document.getElementById('admin-result').style.display = 'none';
-    document.querySelectorAll('.d-btn').forEach(b => { b.className = 'd-btn'; b.style.pointerEvents = "auto"; });
+    
+    document.querySelectorAll('.d-btn').forEach(b => b.className = 'd-btn');
     showPage('admin-detail');
 }
 
@@ -171,31 +201,34 @@ function revealAdmin(btn, guess) {
     const correctD = gameData.currentAdmin.d;
     document.querySelectorAll('.d-btn').forEach(b => {
         b.classList.remove('btn-correct', 'btn-wrong');
-        b.style.pointerEvents = "none";
         if(b.innerText === correctD) b.classList.add('btn-correct');
     });
     if (guess !== correctD) btn.classList.add('btn-wrong');
 
     const res = document.getElementById('admin-result');
     res.style.display = 'block';
-    res.innerHTML = `
-        <div style="font-weight:bold; font-size:1.2rem; color:${guess === correctD ? 'var(--success)' : 'var(--danger)'}">
-            ${guess === correctD ? '🎯 診斷正確！聲望 +2' : '❌ 診斷有誤'}
-        </div>
-        <p>解答：這名員工屬於 <strong>${correctD}</strong> (${gameData.currentAdmin.ans})</p>`;
+    res.innerHTML = `<h3>${guess === correctD ? '🎯 診斷正確！聲望 +2' : '❌ 診斷有誤'}</h3><p>正確答案：<strong>${correctD}</strong> (${gameData.currentAdmin.ans})</p>`;
 }
 
 // ==========================================
-// 5. 計數與提醒
+// 6. 通用 UI 控制
 // ==========================================
+function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.getElementById('page-' + id).style.display = 'block';
+    if(id === 'task-select') document.getElementById('task-code-input').value = "";
+    if(id === 'admin-select') document.getElementById('admin-code-input').value = "";
+    window.scrollTo(0,0);
+}
+
 function nextRound(skip = false, task7 = false) {
     gameData.taskCount++;
     document.getElementById('round-number').innerText = gameData.taskCount;
-    if (task7) openModal("✨ 任務特效", "放棄領導成功，聲望直接 +1 點。");
-    else if (skip) openModal("🧘 管理沉澱", "全體休息。年度進度已推進，請領取 +1 聲望與祕訣卡紅利。");
+    if (task7) openModal("✨ 任務效果", "放棄領導成功，聲望直接 +1 點。");
+    else if (skip) openModal("🧘 管理沉澱", "年度進度已推進，請領取紅利。");
 
     if (gameData.taskCount > 0 && gameData.taskCount % 3 === 0) {
-        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間！</span><br>請全場經理人更換一名員工卡。"), 500);
+        setTimeout(() => openModal("🌊 組織活水", "<span style='color:var(--danger); font-weight:bold;'>強制換血時間到！</span><br>請全場經理人更換一名員工卡。"), 500);
     }
     showPage('home');
 }
