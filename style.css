@@ -135,8 +135,42 @@ header {
 .selection-item.active .check-circle { background: var(--primary); border-color: var(--primary); color: #fff; }
 
 .diagnosis-row { background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 15px; box-shadow: var(--shadow); }
-.style-btn { flex: 1; padding: 15px 5px; border-radius: 12px; border: 1px solid #dee2e6; background: #f8f9fa; font-weight: bold; font-size: 0.85rem; }
-.style-btn.active { background: var(--success) !important; color: #fff !important; border-color: var(--success) !important; }
+/* 按鈕三態樣式 */
+.style-btn {
+    border: 2px solid var(--border);
+    background: #f8f9fa;
+    color: var(--text-sub);
+}
+
+.style-btn.correct {
+    background-color: var(--success) !important;
+    border-color: var(--success) !important;
+    color: white !important;
+}
+
+.style-btn.wrong {
+    background-color: var(--danger) !important;
+    border-color: var(--danger) !important;
+    color: white !important;
+}
+
+/* 說明指引區樣式 */
+.guide-box {
+    background: #fff;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+.guide-item { font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.grey { background: #ced4da; }
+.green { background: var(--success); }
+.red { background: var(--danger); }
 
 /* ==========================================
    6. 行政挑戰：紅綠框單選與反饋

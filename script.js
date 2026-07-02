@@ -196,105 +196,114 @@ function loadTask(id) {
     showPage('task-step1');
 }
 
+function toggleStyleState(btn) {
+    // 狀態循環：default(灰) -> correct(綠) -> wrong(紅)
+    if (!btn.classList.contains('correct') && !btn.classList.contains('wrong')) {
+        btn.classList.add('correct');
+    } else if (btn.classList.contains('correct')) {
+        btn.classList.remove('correct');
+        btn.classList.add('wrong');
+    } else {
+        btn.classList.remove('wrong');
+    }
+}
+
 function goToTaskStep2() {
     gameData.selectedEmployees = [];
-    [1,2,3,4].forEach(d => { if(document.getElementById(`select-d${d}`).classList.contains('active')) gameData.selectedEmployees.push(d); });
-    if(gameData.selectedEmployees.length === 0) return alert("請至少選擇一位上場員工");
+    [1,2,3,4].forEach(d => {
+        if(document.getElementById(`select-d${d}`).classList.contains('active')) gameData.selectedEmployees.push(d);
+    });
+    if(gameData.selectedEmployees.length === 0) return alert("請至少選擇一位員工");
 
     const grid = document.getElementById('diagnosis-grid');
-    grid.innerHTML = `<p class="zone-hint" style="color:var(--primary); font-weight:bold;">💡 點選您對該員工「實際打出」且「正確」的卡牌：</p>`;
+    grid.innerHTML = "";
     gameData.selectedEmployees.forEach(d => {
         const ans = gameData.currentTask.answers['D'+d];
         grid.innerHTML += `
             <div class="diagnosis-row">
-                <span class="d-label">對 D${d} 員工 (正確應為 S${d})：</span>
+                <span class="d-label">對 D${d} 員工 (解答應為 S${d})：</span>
                 <div class="btn-group">
-                    <button class="style-btn" onclick="this.classList.toggle('active')">正確的 [${ans[0]}] 卡</button>
-                    <button class="style-btn" onclick="this.classList.toggle('active')">正確的 [${ans[1]}] 卡</button>
+                    <button class="style-btn" onclick="toggleStyleState(this)">[${ans[0]}] 卡</button>
+                    <button class="style-btn" onclick="toggleStyleState(this)">[${ans[1]}] 卡</button>
                 </div>
             </div>`;
     });
 
     const step2Extra = document.getElementById('step2-extra-action');
-    step2Extra.innerHTML = (gameData.currentTaskId === 7) ? `<button class="ghost-btn" style="color:var(--primary); border-style:solid; border-width:2px;" onclick="nextRound(false, true)">放棄領導 (聲望 +1)</button>` : "";
+    step2Extra.innerHTML = (gameData.currentTaskId === 7) ? `<button class="confirm-btn" style="color:#fff; background:var(--primary);" onclick="nextRound(false, true)">放棄領導 (聲望 +1)</button>` : "";
     showPage('task-step2');
 }
 
 function resolveTask() {
     let log = "";
-    let misalignedAny = false;
-    let d6BuffTriggered = false; // 用於判定任務 3 是否達成加領資格
+    let d6BuffTriggered = false; // 任務 3 用
     const rows = document.querySelectorAll('.diagnosis-row');
     const tid = gameData.currentTaskId;
 
     rows.forEach((row, idx) => {
         const dLevel = gameData.selectedEmployees[idx];
-        const activeCount = row.querySelectorAll('.style-btn.active').length;
+        const correctCount = row.querySelectorAll('.style-btn.correct').length;
+        const wrongCount = row.querySelectorAll('.style-btn.wrong').length;
+        
         const ansData = gameData.currentTask.answers['D'+dLevel];
-        const exampleText = ansData[2]; // 獲取該等級的實務舉例描述
+        const exampleText = ansData[2];
 
-        // 任務 3 判定：只要有任一員工達成半對或完美匹配，該玩家就符合加領 1 顆 d6 的資格
-        if (tid === 3 && activeCount >= 1) {
-            d6BuffTriggered = true;
-        }
+        // 任務 3 判定：只要有派遣且沒出錯，就標記觸發
+        if (tid === 3 && (correctCount >= 1 && wrongCount === 0)) d6BuffTriggered = true;
 
-        if (activeCount === 2) {
-            // --- 完美匹配結果 ---
+        if (wrongCount > 0) {
+            // --- 嚴重錯位結果 (每人扣 1 聲望) ---
+            let penalty = (tid === 10) ? 3 : 1; // 任務 10 的嚴厲問責
+            log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
+                        <strong>D${dLevel} 員工：</strong><span style='color:var(--danger); font-weight:bold;'>嚴重錯位</span><br>
+                        ➔ 無產出，<b style='color:var(--danger);'>主管聲望 -${penalty}</b><br>
+                        <p style='font-size:0.85rem; color:#444; margin-top:5px;'><b>應採取的正確行為：</b>${exampleText}</p>
+                    </div>`;
+        } else if (correctCount === 2) {
+            // --- 完美匹配結果 (+1 聲望) ---
             let rep = (tid === 2) ? 2 : 1;
             let dice = "指定骰 (1-6步)";
-            
-            // 處理特定任務的骰子增益
-            if (tid === 4) dice = "指定骰 (步數擴大為 1~8 步)";
-            if (tid === 5) dice = "d6 骰子一顆 (本局不領取指定骰)";
-            if (tid === 9) dice = "指定骰 (步數直接 x2，最高 12 步)";
+            if (tid === 4) dice = "指定骰 (1-8步)";
+            if (tid === 5) dice = "d6 骰子 (無指定骰)";
+            if (tid === 9) dice = "指定骰 (步數直接 x2)";
 
             log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
                         <strong>D${dLevel} 員工：</strong><span style='color:var(--success); font-weight:bold;'>完美匹配</span><br>
-                        ➔ 獲得 ${dice}，主管聲望 +${rep}<br>
-                        <p style='font-size:0.85rem; color:#444; margin-top:5px; line-height:1.4;'><b>管理行為舉例：</b>${exampleText}</p>
+                        ➔ 獲得 ${dice}，<b style='color:var(--success);'>主管聲望 +${rep}</b><br>
+                        <p style='font-size:0.85rem; color:#444; margin-top:5px;'><b>管理行為舉例：</b>${exampleText}</p>
                     </div>`;
-        } else if (activeCount === 1) {
-            // --- 半對保底結果 ---
+        } else if (correctCount === 1) {
+            // --- 半對保底結果 (聲望不變) ---
             let dice = "d3 骰子一顆";
             if (tid === 8) dice = "指定骰 (1-6步)";
 
             log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
                         <strong>D${dLevel} 員工：</strong><span style='color:var(--warning); font-weight:bold;'>半對保底</span><br>
                         ➔ 獲得 ${dice}，聲望不變<br>
-                        <p style='font-size:0.85rem; color:#444; margin-top:5px; line-height:1.4;'><b>正確管理行為舉例：</b>${exampleText}</p>
+                        <p style='font-size:0.85rem; color:#444; margin-top:5px;'><b>正確管理行為舉例：</b>${exampleText}</p>
                     </div>`;
         } else {
-            // --- 嚴重錯位結果 ---
-            log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
-                        <strong>D${dLevel} 員工：</strong><span style='color:var(--danger); font-weight:bold;'>嚴重錯位</span><br>
-                        ➔ 無產出，主管聲望 -1<br>
-                        <p style='font-size:0.85rem; color:#444; margin-top:5px; line-height:1.4;'><b>應採取的正確行為：</b>${exampleText}</p>
-                    </div>`;
-            misalignedAny = true;
+            // 有選員工但沒按任何按鈕
+            log += `<p style='color:#999; font-size:0.8rem;'>D${dLevel} 員工：未記錄到任何行動。</p>`;
         }
     });
 
-    // === 任務全局效果 (Buff/Debuff) 額外顯示區 ===
+    // === 全局獎勵提示 (僅剩餘加分與資源提醒) ===
     
-    // 任務 1：多員工管理獎勵
+    // 任務 1：多員工管理
     if (tid === 1 && gameData.selectedEmployees.length > 1) {
-        log += `<p style='color:var(--primary); font-weight:bold;'>✨ 任務加成：本局管理多名員工，聲望額外 +1 點。</p>`;
+        log += `<p style='color:var(--primary); font-weight:bold;'>✨ 任務 1 特效：管理多名員工，聲望額外 +1 點。</p>`;
     }
 
-    // 任務 3：單一玩家限額外領取一顆 d6
+    // 任務 3：額外一顆 d6
     if (tid === 3 && d6BuffTriggered) {
-        log += `<p style='color:var(--primary); font-weight:bold; border-top:2px solid #eee; padding-top:10px;'>🎲 本局效果：團隊掃除紅利，本回合您額外獲得 1 顆 d6 骰子。</p>`;
+        log += `<p style='color:var(--primary); font-weight:bold; border-top:2px solid #eee; padding-top:10px;'>🎲 任務 3 紅利：本回合您總計額外領取 1 顆 d6 骰子。</p>`;
     }
 
-    // 任務 10：嚴厲問責
-    if (tid === 10 && misalignedAny) {
-        log += `<p style='color:var(--danger); font-weight:bold;'>⚠️ 嚴厲問責：本局發生管理失職，聲望改為扣除 3 點！</p>`;
-    }
-
-    // 其他任務的結算提醒 (6:領卡, 9:抽牌, 10:換牌)
-    if (tid === 6) log += `<p style='color:var(--primary); font-weight:bold;'>🎁 提醒：請從銀行領取 1 張管理祕訣卡。</p>`;
-    if (tid === 9) log += `<p style='color:var(--primary); font-weight:bold;'>🃏 提醒：請額外抽取 1 張維度卡加入手牌。</p>`;
-    if (tid === 10) log += `<p style='color:var(--primary); font-weight:bold;'>🔄 提醒：請將手中 2 張維度卡交換給左邊玩家。</p>`;
+    // 提醒資源變動
+    if (tid === 6) log += `<p style='color:var(--primary);'>🎁 提醒：每位玩家從銀行領取 1 張管理祕訣卡。</p>`;
+    if (tid === 9) log += `<p style='color:var(--primary);'>🃏 提醒：每位玩家額外抽 1 張維度卡。</p>`;
+    if (tid === 10) log += `<p style='color:var(--primary);'>🔄 提醒：請將手上 2 張維度卡換給左邊玩家。</p>`;
 
     openModal("結算結果報告", log, () => nextRound());
 }

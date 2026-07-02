@@ -79,9 +79,18 @@
                 <div id="step1-extra-action"></div>
             </section>
 
-            <!-- 任務 Step 2：判定 -->
+            <!-- 任務：Step 2 判定 -->
             <section id="page-task-step2" class="page" style="display:none;">
                 <h3 class="step-title">步驟 2：出牌判定</h3>
+                
+                <!-- 新增按鈕說明指引 -->
+                <div class="guide-box">
+                    <div class="guide-item"><span class="dot grey"></span> 沒出這張牌</div>
+                    <div class="guide-item"><span class="dot green"></span> 出了這張牌且正確</div>
+                    <div class="guide-item"><span class="dot red"></span> 出了這張牌但錯誤</div>
+                    <p class="hint-text">※ 點擊按鈕可切換狀態：灰 ➔ 綠 ➔ 紅</p>
+                </div>
+
                 <div id="diagnosis-grid"></div>
                 <button class="confirm-btn" onclick="resolveTask()">結算產出結果</button>
                 <div id="step2-extra-action"></div>
