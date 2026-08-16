@@ -194,7 +194,6 @@ function resolveTask() {
             let rep = (tid === 2) ? 2 : 1;
             let dice = "d6 骰子一顆";
             if (tid === 4) dice = "投擲步數 + 2 步";
-            if (tid === 9) dice = "d6 骰子 (點數直接 x2)";
 
             log += `<div class='result-item' style='margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;'>
                         <strong>D${dLevel} 員工：</strong><span style='color:var(--success); font-weight:bold;'>完美匹配</span><br>
@@ -254,8 +253,12 @@ function revealAdmin(btn, guess) {
 function nextRound(skip = false, task7 = false) {
     gameData.taskCount++;
     document.getElementById('round-number').innerText = gameData.taskCount;
-    if (task7) openModal("✨ 任務特效結算", "您選擇不派遣員工。年度進度已推進，聲望直接 +1 點。");
-    else if (skip) openModal("🧘 管理沉澱期紅利", "獲得團隊自動運轉紅利：<br><b>● 主管聲望 +1<br>● 獲得 1 張免費管理祕訣卡</b>");
+    if (task7) {
+        openModal("✨ 任務特效結算", "您選擇不派遣員工。年度進度已推進，請聲望直接 +1 點。");
+    } else if (skip) {
+        // 修正：移除聲望 +1，僅保留管理祕訣卡紅利
+        openModal("🧘 管理沉澱期", "本回合無人可派。獲得團隊自動運轉紅利：<br><br><b style='color:var(--primary); font-size:1.1rem;'>● 獲得 1 張免費管理祕訣卡</b>");
+    }
 
     if (gameData.taskCount > 0 && gameData.taskCount % 3 === 0) {
         setTimeout(() => openModal("🌊 組織活水", "強制換血時間到！請全場玩家更換一名員工卡。"), 500);
